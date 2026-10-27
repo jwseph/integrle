@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>Integrle - Integrand Corrector</title>
+  <link rel="icon" type="image/x-icon" href="./favicon.png">
+
+  <!-- KaTeX -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --code-bg: #090d16;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 1.2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-success { background: var(--success); }
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.775rem; }
+
+    main {
+      flex: 1;
+      max-width: 1700px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Top split panels: Input & Output */
+    .io-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .io-header {
+      padding: 0.5rem 1rem;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .io-body {
+      padding: 0.75rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .io-collapsed .io-body { display: none; }
+
+    textarea.code-box {
+      width: 100%;
+      height: 160px;
+      background: var(--code-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      resize: vertical;
+      white-space: pre;
+    }
+
+    /* Side-by-side core layout */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      gap: 1rem;
+    }
+
+    .side-by-side {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 1rem;
+      min-height: 600px;
+    }
+
+    @media (max-width: 900px) {
+      .side-by-side { grid-template-columns: 1fr; }
+      .io-body { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 0.6rem 1rem;
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .panel-body {
+      padding: 1rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Photo viewer */
+    .photo-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      min-height: 480px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .photo-wrapper img {
+      max-width: 100%;
+      max-height: 540px;
+      object-fit: contain;
+      cursor: zoom-in;
+      transition: transform 0.15s;
+    }
+
+    .photo-wrapper img.zoomed {
+      max-height: none;
+      transform: scale(1.6);
+      cursor: zoom-out;
+    }
+
+    /* LaTeX Editor & Preview */
+    .math-render-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.5rem 1rem;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      overflow-x: auto;
+    }
+
+    .editor-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .latex-textarea {
+      width: 100%;
+      min-height: 90px;
+      background: var(--code-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.6rem;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 1.1rem;
+    }
+    .latex-textarea:focus { outline: none; border-color: var(--accent); }
+
+    .quick-symbols {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .sym-btn {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.25rem 0.5rem;
+      font-family: monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .sym-btn:hover { background: var(--accent); color: white; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.45rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-mod { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
+    .badge-same { background: rgba(148, 163, 184, 0.2); color: var(--muted); }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #10b981;
+      color: white;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      display: none;
+      z-index: 1000;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div style="display:flex; align-items:center; gap:0.6rem;">
+      <span style="font-size:1.3rem; font-weight:bold; color:var(--accent);">&int;</span>
+      <span style="font-weight:600;">Integrle - Photo &amp; LaTeX Corrector</span>
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+      <button class="btn btn-success" id="btnCopy">Copy Formatted Output</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Collapsible Input/Output -->
+    <div class="io-container" id="ioBox">
+      <div class="io-header" id="ioToggle">
+        <span>Raw Code Lists (Input &amp; Live Synchronized Output)</span>
+        <span id="ioArrow">&#9650; Click to collapse/expand</span>
+      </div>
+      <div class="io-body">
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem; font-size:0.8rem; color:var(--muted);">
+            <span>Input list:</span>
+            <button class="btn btn-sm btn-outline" id="btnReparse">Reparse</button>
+          </div>
+          <textarea id="inputArea" class="code-box" spellcheck="false"></textarea>
+        </div>
+        <div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem; font-size:0.8rem; color:var(--muted);">
+            <span>Output list (Blank lines &amp; comments saved):</span>
+            <button class="btn btn-sm btn-success" id="btnCopyInner">Copy</button>
+          </div>
+          <textarea id="outputArea" class="code-box" spellcheck="false" readonly></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <button class="btn btn-outline" id="btnPrev">&larr; Prev (Alt+&larr;)</button>
+        <button class="btn" id="btnNext">Next &rarr; (Alt+&rarr;)</button>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:0.6rem;">
+        <span id="counterText" style="font-size:0.9rem; font-weight:600;">Row 1 of 1</span>
+        <select id="rowSelect" style="background:var(--code-bg); color:var(--text); border:1px solid var(--border); padding:0.3rem; border-radius:4px; max-width:320px;"></select>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <span id="diffBadge" class="badge badge-same">Unchanged</span>
+        <button class="btn btn-outline btn-sm" id="btnRevert">Revert</button>
+      </div>
+    </div>
+
+    <!-- Side by Side -->
+    <div class="side-by-side">
+      <!-- Left: Photo Viewer -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>📷 Instagram Photo</span>
+          <div style="display:flex; gap:0.4rem;">
+            <a href="#" target="_blank" id="openImgLink" class="btn btn-sm btn-outline">Open Full Image ↗</a>
+            <button class="btn btn-sm btn-outline" id="btnRetryProxy">Try Proxy</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="photo-wrapper">
+            <img id="postImg" referrerpolicy="no-referrer" alt="Instagram Problem Photo">
+          </div>
+          <div style="font-size:0.75rem; color:var(--muted); text-align:center;">
+            Click photo to zoom in/out. If image fails to load, click "Try Proxy" or "Open Full Image".
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: LaTeX Integrand Corrector -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>&int; LaTeX Integrand</span>
+          <span id="dateCommentText" style="color:var(--muted); font-size:0.85rem;"></span>
+        </div>
+        <div class="panel-body">
+          <div style="font-size:0.85rem; color:var(--muted);">Live Render:</div>
+          <div class="math-render-box" id="mathPreview"></div>
+
+          <div class="quick-symbols">
+            <button class="sym-btn" data-s="\frac{a}{b}">\frac{a}{b}</button>
+            <button class="sym-btn" data-s="\sqrt{x}">\sqrt{x}</button>
+            <button class="sym-btn" data-s="\sqrt[n]{x}">\sqrt[n]{x}</button>
+            <button class="sym-btn" data-s="^{2}">x²</button>
+            <button class="sym-btn" data-s="\left(  \right)">( )</button>
+            <button class="sym-btn" data-s="\sin(x)">\sin</button>
+            <button class="sym-btn" data-s="\cos(x)">\cos</button>
+            <button class="sym-btn" data-s="\tan(x)">\tan</button>
+            <button class="sym-btn" data-s="\ln(x)">\ln</button>
+            <button class="sym-btn" data-s="\arctan(x)">\arctan</button>
+            <button class="sym-btn" data-s="\arcsin(x)">\arcsin</button>
+            <button class="sym-btn" data-s="e^{x}">eˣ</button>
+          </div>
+
+          <div class="editor-box">
+            <div style="display:flex; justify-content:space-between; font-size:0.85rem; color:var(--muted);">
+              <span>Edit String.raw`...`:</span>
+              <span id="origDisplay" style="font-family:monospace; font-size:0.75rem;"></span>
+            </div>
+            <textarea id="latexInput" class="latex-textarea" spellcheck="false" placeholder="Enter LaTeX integrand here..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <script>
+    // Initial Input supplied by user
+    const INITIAL_INPUT = `[
+[String.raw\`a\\arcsin(2ax)\`], // 2025-10-27
+[String.raw\`\\frac{e^{-\\sqrt{x}}}{\\sqrt{x}}\`], // 2025-10-28
+[String.raw\`\\frac{1}{x^2-6x+18}\`], // 2025-10-29
+[String.raw\`e^{-x}\\sin(x)\`], // 2025-10-30
+[String.raw\`e^{-x}\\cos(x)\`], // 2025-10-31
+
+[String.raw\`\\frac{1}{x\\sqrt{x-1}}\`], // 2025-11-01
+[String.raw\`\\frac{1}{\\sqrt{ax+b}}\`], // 2025-11-02
+[String.raw\`\\frac{x^3-2x^2+3x+3}{x^4+2x^2+1}\`], // 2025-11-03
+[String.raw\`\\ln(\\sqrt[3]{x})\`], // 2025-11-04
+[String.raw\`\\frac{\\sqrt{x}}{1+x}\`], // 2025-11-05
+[String.raw\`\\frac{1}{x^4+x}\`], // 2025-11-06
+[String.raw\`\\frac{1}{x^n+x}\`], // 2025-11-07
+[String.raw\`\\frac{\\ln(\\ln(x))}{x}\`], // 2025-11-08
+[String.raw\`\\frac{x}{(1+x^2)^{3/2}}\`], // 2025-11-09
+[String.raw\`\\sqrt[3]{\\tan(x)}\`], // 2025-11-10
+[String.raw\`\\frac{1}{\\sqrt{4-x^2}}\`], // 2025-11-11
+[String.raw\`\\frac{x^{15}}{1+x^{32}}\`], // 2025-11-12
+[String.raw\`\\frac{x}{1+\\sqrt{x}}\`], // 2025-11-13
+[String.raw\`\\frac{e^x}{1+e^{2x}}\`], // 2025-11-14
+[String.raw\`\\frac{1}{x\\sqrt{x^3-1}}\`], // 2025-11-15
+[String.raw\`x\\ln(\\sqrt{x})\`], // 2025-11-16
+[String.raw\`\\frac{\\cos^3(x)+\\cos^5(x)}{\\sin^2(x)+\\sin^4(x)}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/579071346_1420714003393311_3175975344463510357_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=103&ig_cache_key=Mzc2NzgzMTIyNzI2OTY3NTQ0NQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=0nbEnbx03RoQ7kNvwGxbjnT&_nc_oc=AdpDevzuwxxg1TNAqOVtzwWP0lR5KWxSw4vm0xI9SOzDnOR-Uj5pZBseOvyyrj3rIW4G2nYFht0_38dd8-ZjgFbC&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=OOTGoXPCsHM0eefSZO2U9Q&_nc_ss=7b689&oh=00_AQNxNXp8U19RgBmi0Jk8XFFSXZ_99-iKyeXId8loOTpBjA&oe=6AE5F42A"], // 2025-11-17
+[String.raw\`\\frac{e^{2x}}{1+e^x}\`], // 2025-11-18
+[String.raw\`xe^{-x}\`], // 2025-11-19
+[String.raw\`\\frac{x}{\\sqrt{1+x^2}}\`], // 2025-11-20
+[String.raw\`\\sqrt{ax+b}\`], // 2025-11-21
+[String.raw\`\\frac{\\cos(x)}{\\sqrt{\\sin(x)}}\`], // 2025-11-22
+[String.raw\`\\cot(ax)\`], // 2025-11-23
+[String.raw\`\\frac{1+2x^3}{x^2\\sqrt{4-x^2}}\`], // 2025-11-24
+[String.raw\`\\frac{\\sin(x)\\cos(x)}{1+\\cos^2(2x)}\`], // 2025-11-25
+[String.raw\`\\frac{\\sin(2x)}{1+\\cos(x)}\`], // 2025-11-26
+[String.raw\`\\frac{\\sin(2x)}{1+\\cos^2(x)}\`], // 2025-11-27
+[String.raw\`\\frac{\\sin(2x)}{1+\\cos^4(x)}\`], // 2025-11-28
+[String.raw\`\\frac{\\ln(\\tan(x/2))}{\\sin(x)}\`], // 2025-11-29
+[String.raw\`\\sqrt{x^2-1}\`], // 2025-11-30
+
+[String.raw\`\\frac{\\arctan(x)}{(x-1)^3}\`], // 2025-12-01
+[String.raw\`x\\sqrt{4-x^2}\`], // 2025-12-02
+[String.raw\`\\frac{x^2}{\\sqrt{1+x^2}}\`], // 2025-12-03
+[String.raw\`\\frac{\\sin(x)}{\\sqrt{\\cos(x)}}\`], // 2025-12-04
+[String.raw\`\\frac{\\sqrt{x}}{1+x^3}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/577059638_1420693380062040_8369239314777112188_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ig_cache_key=Mzc4MDg3NzIwMTIzNjQ2Njc0NQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=gaWQK7Ca4bYQ7kNvwGzCcZU&_nc_oc=Adq88z4Y0cnuX8TxF2IwQMIJqlRLHP6gNwQFSP-9VIGZ4LIUvYGWpy81yUM0wqawBc-jZVXzEPej1Hqezfz5ZoTw&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=8OIEWTBuiy6tjpt-WpQtiw&_nc_ss=7b689&oh=00_AQOqGZG-qS-t8fkhJ3yWIHeTkPsHBfZx7ugcRgivnBiHiA&oe=6AE6184E"], // 2025-12-05
+[String.raw\`e^{ax}\`], // 2025-12-06
+[String.raw\`\\frac{(x+1)^2}{x}\`], // 2025-12-07
+[String.raw\`\\frac{\\sqrt{4-x^2}}{x^2}\`], // 2025-12-08
+[String.raw\`\\frac{x}{(x+1)^2}\`], // 2025-12-09
+[String.raw\`\\frac{x^2}{\\sqrt{1-x}}\`], // 2025-12-10
+[String.raw\`x^5\\sqrt{1-x^3}\`], // 2025-12-11
+[String.raw\`\\frac{\\cos(x)}{\\sqrt{1-\\sin(x)}}\`], // 2025-12-12
+[String.raw\`\\frac{x^3}{1+x^8}\`], // 2025-12-13
+[String.raw\`\\frac{x^{n-1}}{1+x^{2n}}\`], // 2025-12-14
+[String.raw\`\\frac{x^3\\ln(x^2+1)}{(x^2+1)^2}\`], // 2025-12-15
+[String.raw\`\\sin(5x)\\sin(3x)\`], // 2025-12-16
+[String.raw\`\\frac{1}{e^{-x}-1}\`], // 2025-12-17
+[String.raw\`\\csc^6(x)\`], // 2025-12-18
+[String.raw\`x^5\\sin(x^3)\`], // 2025-12-19
+[String.raw\`\\frac{1}{1-\\sqrt{x}}\`], // 2025-12-20
+[String.raw\`\\frac{e^{\\tan(x)}}{\\cos^2(x)}\`], // 2025-12-21
+[String.raw\`\\frac{1}{x^2}\\cos(1/x)\`], // 2025-12-22
+[String.raw\`x\\sqrt{1-x^2}\`], // 2025-12-23
+[String.raw\`(1-x^2)^{3/2}\`], // 2025-12-24
+[String.raw\`\\frac{1}{x\\sqrt{x^n-1}}\`], // 2025-12-25
+[String.raw\`3^x\`], // 2025-12-26
+[String.raw\`a^x\`], // 2025-12-27
+[String.raw\`e^{x/3}\`], // 2025-12-28
+[String.raw\`\\frac{x^4}{(1+x^6)^2}\`], // 2025-12-29
+[String.raw\`\\frac{x^4}{1+x^{10}}\`], // 2025-12-30
+[String.raw\`\\frac{x^2+x+\\sqrt{x+1}}{x+1}\`], // 2025-12-31
+
+[String.raw\`\\frac{\\sqrt{x+1}}{x}\`], // 2026-01-01
+[String.raw\`\\frac{\\sin(x)}{1-\\sin(x)}\`], // 2026-01-02
+[String.raw\`\\frac{e^{3x}}{1+e^{2x}}\`], // 2026-01-03
+[String.raw\`\\tan(ax)\`], // 2026-01-04
+[String.raw\`x^3\\ln(x^3+1)\`], // 2026-01-05
+[String.raw\`\\frac{x+1}{x-1}\`], // 2026-01-06
+[String.raw\`\\frac{e^x-1}{e^x+1}\`], // 2026-01-07
+[String.raw\`\\frac{1}{x^2-2x+2}\`], // 2026-01-08
+[String.raw\`\\frac{x+1}{x^2+2x+2}\`], // 2026-01-09
+[String.raw\`x^2\\sqrt{1-x^2}\`], // 2026-01-10
+[String.raw\`\\frac{1}{\\sin(2x)}\`], // 2026-01-11
+[String.raw\`\\frac{\\sqrt{\\cos(x)}}{\\sin(x)}\`], // 2026-01-12
+[String.raw\`\\frac{\\sin(x)}{\\sqrt{1-\\cos(x)}}\`], // 2026-01-13
+[String.raw\`x(1-x^2)^{3/2}\`], // 2026-01-14
+[String.raw\`\\frac{x^2+x-1}{x^2-1}\`], // 2026-01-15
+[String.raw\`\\frac{1}{\\sqrt{e^x}}\`], // 2026-01-16
+[String.raw\`\\frac{1}{\\sqrt{e^x+1}}\`], // 2026-01-17
+[String.raw\`\\frac{1}{\\tan(x)}\`], // 2026-01-18
+[String.raw\`\\frac{\\arctan^2(x)}{x^2+1}\`], // 2026-01-19
+[String.raw\`\\frac{1}{\\sqrt{x-1}}\`], // 2026-01-20
+[String.raw\`\\frac{1+\\sqrt{x}}{1-\\sqrt{x}}\`], // 2026-01-21
+[String.raw\`x(1+x^2)^{3/2}\`], // 2026-01-22
+[String.raw\`x^5\\cos(x^3)\`], // 2026-01-23
+[String.raw\`\\frac{1}{\\cos^6(x)}\`], // 2026-01-24
+[String.raw\`\\frac{1+e^x}{1-e^x}\`], // 2026-01-25
+[String.raw\`\\frac{\\ln(x+1)}{x}+\\frac{\\ln(x)}{x+1}\`], // 2026-01-26
+[String.raw\`\\frac{1}{x^2-2x+10}\`], // 2026-01-27
+[String.raw\`e^{x/2}\`], // 2026-01-28
+[String.raw\`\\frac{x^{n-1}}{1+x^n}\`], // 2026-01-29
+[String.raw\`\\frac{\\sin(\\tan(x))}{\\cos^2(x)}\`], // 2026-01-30
+[String.raw\`\\frac{\\cos^2(x)}{1-\\sin(x)}\`], // 2026-01-31
+
+[String.raw\`x\\ln(x^2+1)\`], // 2026-02-01
+[String.raw\`\\frac{x^5-x^4+2x^3-x^2+x-1}{x^5+x^4+2x^3+2x^2+x+1}\`], // 2026-02-02
+[String.raw\`\\frac{1}{x\\ln^{5}(x)}\`], // 2026-02-03
+[String.raw\`\\sin(2\\arcsin(x))\`], // 2026-02-04
+[String.raw\`\\frac{e^x}{e^x-e^{-x}}\`], // 2026-02-05
+[String.raw\`\\sqrt{x}\`], // 2026-02-06
+[String.raw\`\\frac{1}{2x^2-2x+1}\`], // 2026-02-07
+[String.raw\`\\frac{1}{(a^2+x^2)^{3/2}}\`], // 2026-02-08
+[String.raw\`\\frac{\\ln(x)+2}{x(\\ln(x)+1)(\\ln(x)+3)}\`], // 2026-02-09
+[String.raw\`\\frac{x^3-1}{x^2}\`], // 2026-02-10
+[String.raw\`\\frac{x^2}{\\sqrt{x^3-1}}\`], // 2026-02-11
+[String.raw\`\\tan(x)\\ln(\\cos(x))\`], // 2026-02-12
+[String.raw\`\\frac{1}{e^{-x}+1}\`], // 2026-02-13
+[String.raw\`\\frac{x^5}{x^3+1}\`], // 2026-02-14
+[String.raw\`\\frac{1}{ax^2+bx+c}\`], // 2026-02-15
+[String.raw\`\\frac{2\\sqrt{x}-1}{2x\\sqrt{x}-2x}\`], // 2026-02-16
+[String.raw\`\\frac{x}{(x+1)^{3/2}}\`], // 2026-02-17
+[String.raw\`2x\\sqrt{x^2+1}\`], // 2026-02-18
+[String.raw\`\\frac{\\cos(\\tan(x))}{\\cos^2(x)}\`], // 2026-02-19
+[String.raw\`\\frac{1}{x^2-2x+3}\`], // 2026-02-20
+[String.raw\`\\frac{e^{1/x^2}}{x^3}\`], // 2026-02-21
+[String.raw\`\\frac{ax+b}{cx+d}\`], // 2026-02-22
+[String.raw\`\\frac{x}{\\sqrt{(b-x)(x-a)}}\`], // 2026-02-23
+[String.raw\`\\frac{e^{-x}}{1+e^{-x}}\`], // 2026-02-24
+[String.raw\`\\arctan(2x)\`], // 2026-02-25
+[String.raw\`x^3\\sin(x^2)\`], // 2026-02-26
+[String.raw\`\\frac{\\ln(x+1)-\\ln(x)}{x(x+1)}\`], // 2026-02-27
+[String.raw\`\\cos^2(2x)\`], // 2026-02-28
+
+[String.raw\`\\frac{x^2+1}{x^4+1}\`], // 2026-03-01
+[String.raw\`\\frac{\\sqrt{\\sin(x)}\\cos(x)}{\\sin(x)+\\cos(x)}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/629267452_1498814608916583_5954066580931391351_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=108&ig_cache_key=Mzg0MzkzMjY4MzAyMjIzNzc5MQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=mg7U-J39LnEQ7kNvwFFXIgd&_nc_oc=Ado9nwpdQiLJ-6Uk1mGn2wHGCmXJeF_95GZp9IEx_a6XQQ31Jypxy11IBe4Ppm3OlbfVYve6lj2S04k20naE2gHk&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=BVUfnmCtEFo9QfCFcDbirw&_nc_ss=7b689&oh=00_AQMlYdujvPs6TxZ77J60XLu-HkrjQpjL-BUsKNLO9nSQJA&oe=6AE626A4"], // 2026-03-02
+[String.raw\`e^{3x}\`], // 2026-03-03
+[String.raw\`\\frac{1}{x\\ln^n(x)}\`], // 2026-03-04
+[String.raw\`xe^{-x}\`], // 2026-03-05
+[String.raw\`\\sin^3(x)\\cos^4(x)\`], // 2026-03-06
+[String.raw\`\\frac{1}{x^2-x+1}\`], // 2026-03-07
+[String.raw\`\\frac{\\sin(x)\\cos(x)}{\\sin^4(x)+\\cos^4(x)}\`], // 2026-03-08
+[String.raw\`x\\arctan(x)\\ln(x^2+1)\`], // 2026-03-09
+[String.raw\`\\frac{\\cos(x)}{\\sqrt{1+\\sin(x)}}\`], // 2026-03-10
+[String.raw\`\\frac{1}{\\sqrt{4x-x^2}}\`], // 2026-03-11
+[String.raw\`\\frac{\\sin^2(x)}{(1+\\cos(x))^2}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/649091223_1524755782989132_1043624218033196242_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ig_cache_key=Mzg1MTE4MDQ1NjIwNTUwODUzNg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=dIl3IqwIewsQ7kNvwGiGPAz&_nc_oc=AdoznNYO2XKN1elXQPmkjrPSUGd8LFkqpTyNIEAEqv5alc5AYrKzfGGSO4Y9JCQsoieEXCB7gSN6VJ4zq8JOfzHx&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=lUEECK8HvrWds1Z84ee46Q&_nc_ss=7b689&oh=00_AQPu3qnKF3FNEdaVfiMWO4BArvd2nBTWe77LXiuf1XkVEQ&oe=6AE61E56"], // 2026-03-12
+[String.raw\`(ax+b)^n\`], // 2026-03-13
+[String.raw\`\\sqrt{\\tan(x)}+\\sqrt{\\cot(x)}\`], // 2026-03-14
+[String.raw\`e^{-x}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/650559346_1524764129654964_174973857477342742_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ig_cache_key=Mzg1MzM1NDc1NDc0NDQyMjAxOQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=4Sn9UY2Pg-0Q7kNvwFNbREd&_nc_oc=AdpvdMwIG7vCD6GFiyKoXNHztmuymY8lIupEJ78jhb3CGI1FD0fFqZBvPRq6rxwCkKp3uP6sXSbRx7gvFL2O3-Uw&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=3-28ifZ6-e4AIl2cwA7xrw&_nc_ss=7b689&oh=00_AQMBXRnWCE53Bhapo1lxP6h1ouBD3QCBVNhYr3OawvbPyw&oe=6AE61CCB"], // 2026-03-15
+[String.raw\`\\left(\\frac{3}{2}\\right)^x+\\frac{\\pi\\sec^2(x)}{4}-\\frac{e}{x^2+5}\`], // 2026-03-16
+[String.raw\`\\frac{(1-2x)e^{\\arctan(x)}}{(1+x^2)^2}\`], // 2026-03-17
+[String.raw\`\\frac{\\sin(x)}{(1+\\cos(x))^2}\`], // 2026-03-18
+[String.raw\`\\frac{x^3}{\\sqrt{x^2+4}}\`], // 2026-03-19
+[String.raw\`\\frac{1}{(a^2+x^2)(b^2+x^2)}\`], // 2026-03-20
+[String.raw\`\\sin^3(2x)\`], // 2026-03-21
+[String.raw\`x^3\\cos(x^2)\`], // 2026-03-22
+[String.raw\`\\frac{4x^2-16x+12}{(x-2)^2(x^2-2x+2)^2}\`], // 2026-03-23
+[String.raw\`\\cos(ax+b)\`], // 2026-03-24
+[String.raw\`\\frac{1}{16+x^2}\`], // 2026-03-25
+[String.raw\`\\frac{1}{x^{1/2}+x^{1/3}}\`], // 2026-03-26
+[String.raw\`\\frac{\\sqrt{x}}{\\sqrt{1-x^3}}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/648620459_1524936596304384_3356119489804744050_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=Mzg2MjA1MjA5NzIyMzQ3OTAxOQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=x32B1ShmbSkQ7kNvwGfSP2u&_nc_oc=AdodkZCW0BHTt1Rk8Xp2JnqPFr8EfyfZzUHLGnt7mI9VAdSkmO21RJEAG52-hh4KrBPwphKLu7cDgdNyP0s39F89&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=nLnr3XfvtHr6_9uXvI42Dg&_nc_ss=7b689&oh=00_AQPNzsCcbRfvIsSfmdT9e3bUIp9buplRI1CkIjSShc1pTQ&oe=6AE628F4"], // 2026-03-27
+[String.raw\`\\frac{xe^x}{(1+x)^2}\`], // 2026-03-28
+[String.raw\`\\frac{1}{x^2\\sqrt{1-x^2}}\`], // 2026-03-29
+[String.raw\`\\frac{1}{x^6+1}\`], // 2026-03-30
+[String.raw\`\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/649063487_1524939749637402_2059051673005747596_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=103&ig_cache_key=Mzg2NDkyMTAxMjY2Nzg0MzYxOQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=gYeUOA9Qc1cQ7kNvwFsrvJE&_nc_oc=AdqOk1ktVuco5U7cgKWtnt-pajgedOFJBoslS2q8YLpu2n5m3hYhGz8P1d2OhWjoDwkzWwbzXW6qU1-j6AqK46Fd&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=2MrP-i07l5WTHo-dFC2FBQ&_nc_ss=7b689&oh=00_AQOuRpLWxB-hZimLxzjbWJwgBxKR1jftnuETZ7wKjzU_9A&oe=6AE61C66"], // 2026-03-31
+
+[String.raw\`e^{2x}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/649490919_1524943819636995_2732411171843823718_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ig_cache_key=Mzg2NTY0NTc4ODY1OTYxNDE3Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=ULE7sSYXQKcQ7kNvwHcU0eY&_nc_oc=Adr2-v_Y1_TipSyifgt22Q4c7nEjb3Pgy8nGLxElj4Y3sUsHi1ONj8N0tg1q9_yf19_rf-ACl_jgTGKhv7PZXFOE&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=SnzIonS_alOaCoDmYIafyA&_nc_ss=7b689&oh=00_AQMxyKgHzlil1hVBv7KbVQOGdHmq5ZdO5r-d5gwNZ4O2pQ&oe=6AE5FEAC"], // 2026-04-01
+[String.raw\`\\frac{\\arcsin(x)}{\\sqrt{1+x}}\`], // 2026-04-02
+[String.raw\`\\frac{\\sqrt{x^2-1}}{x}\`], // 2026-04-03
+[String.raw\`\\frac{1}{ax+b}\`], // 2026-04-04
+[String.raw\`\\cos^3(x)\\sin^4(x)\`], // 2026-04-05
+[String.raw\`\\frac{e^x}{(1+\\sinh(x))(2+\\tanh(x))}\`], // 2026-04-06
+[String.raw\`\\sqrt{9-x^2}\`], // 2026-04-07
+[String.raw\`\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/668199071_1550597213738322_9078605021852856071_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=100&ig_cache_key=Mzg3MDg0OTQ2NTE4ODIyMjg0Nw%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=RXXnYFDb-MEQ7kNvwHS-R_s&_nc_oc=Adoxjv_s3QznZQsRytOWdYRzltZcx3LgI1SQCdV7wZG6Z04KGS2wozdr0wt1SUwl3ofc64lxUo5TEKPxhIv4feSD&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=FE5tiG5obnbBOu1fQFEHeA&_nc_ss=7b689&oh=00_AQO4YtEYGiVR2QoSqb4QeJLC9VkT4gKjIqQbYtCwNNQlkg&oe=6AE600F5"], // 2026-04-08
+[String.raw\`x^{-1/2}\`], // 2026-04-08
+[String.raw\`\\frac{1}{x\\ln^3(x)}\`], // 2026-04-09
+[String.raw\`e^{ax}\\cos(bx)\`], // 2026-04-10
+[String.raw\`\\frac{\\cos(x)}{\\sin^4(x)}\`], // 2026-04-11
+[String.raw\`(2x^2+1)e^{x^2}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/667019165_1551560273642016_2127111492068523077_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=110&ig_cache_key=Mzg3MzYxODI3OTgyNzUwMjY1Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=tElmbZY6FXwQ7kNvwFIqh8X&_nc_oc=Adr6xdRD7tLy44SK3j8-MmQCWwV-xzE0NHOuNzq0DQttGD1lIa0jmxB47WFoORb13DgofJQZr-JJOb-pT1H3yVGi&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=0N96YX6Xx3uQd2n8QLOPEw&_nc_ss=7b689&oh=00_AQNIRXgsiI9KBGPvYCd1X9oSFcie9gOFAuBnRJwDza_VHw&oe=6AE603E3"], // 2026-04-12
+[String.raw\`\\frac{1}{(x^3+1)\\sqrt{x^2+1}}\`], // 2026-04-13
+[String.raw\`x^3\\sqrt{1-x^2}\`], // 2026-04-15
+[String.raw\`\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/672066380_1555535283244515_6643623862154979667_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=103&ig_cache_key=Mzg3NjUxNzM3OTUwNTU5MTYzMg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=wgCRENQsdGIQ7kNvwFlfu-n&_nc_oc=AdpMbWN2JNjuTm8dh9rjLMf8j0j4_26IvXMTFdgzazp3Q2mL5CTqEp6gzJnIAXWFnBqZKYlRb6l96C6R_hS1eUYC&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=lScQYyZND_60d06FENX3rg&_nc_ss=7b689&oh=00_AQPyzIr6gUPniDiKjAWeNTz_KtMk_sGqg5Y1TESaZyqJJw&oe=6AE61C47"], // 2026-04-16
+[String.raw\`\\frac{\\sqrt{x^n-1}}{x}\`], // 2026-04-17
+[String.raw\`\\frac{\\sin(x)+\\cos(x)}{\\sqrt{\\sin(2x)}}\`], // 2026-04-18
+[String.raw\`x\\ln(x+1)\`], // 2026-04-19
+[String.raw\`\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/678437551_1560964559368254_3887984415581132957_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=104&ig_cache_key=Mzg3OTQxNjQ4MTk0MzQ1OTMyOQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=dqsURDPQND8Q7kNvwE3Ynht&_nc_oc=AdrxA4oQ1voevdtRVGsr9QhJ1X7e0t3w2iPzd0I0m7FHITlOks1QafX4KlHLA7BTTFqEseLv691kEcAUlRoduHJ_&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=Xpwg5QRJCT9AtLwduK3vDg&_nc_ss=7b289&oh=00_AQM4agXOPQGfskaIwlwXDtvGXjj0wJR09_XLrSpTCrub9Q&oe=6AE6143A"], // 2026-04-20
+[String.raw\`\\frac{1}{e^x+1}\`], // 2026-04-21
+[String.raw\`\\ln(x)\`], // 2026-04-22
+[String.raw\`\\ln(x+\\sqrt{1+x^2})\`], // 2026-04-23
+[String.raw\`\\frac{1}{x^2+x+1}\`], // 2026-04-24
+[String.raw\`\\frac{\\sqrt{1-x^2}}{x^2}\`], // 2026-04-25
+[String.raw\`e^x\\sin(e^x)\`], // 2026-04-26
+[String.raw\`\\frac{\\pi\\ln(\\sec(x)+\\tan(x))}{\\cos(x)}\`], // 2026-04-27
+[String.raw\`e^x\\sin(x)\`], // 2026-04-28
+[String.raw\`e^x\\cos(x)\`], // 2026-04-29
+[String.raw\`\\frac{\\ln(\\ln(x))}{x\\ln(x)}\`], // 2026-04-30
+
+[String.raw\`x\\sin(x)\`], // 2026-05-01
+[String.raw\`\\sin^2(x)\`], // 2026-05-02
+[String.raw\`\\cos^2(x)\`], // 2026-05-03
+[String.raw\`\\frac{4x+7}{(x^2+2x+3)^2}\`], // 2026-05-04
+[String.raw\`\\arccos(x)\`], // 2026-05-05
+[String.raw\`\\arcsin(x)\`], // 2026-05-06
+[String.raw\`\\arctan(x)\`], // 2026-05-07
+[String.raw\`x\\arctan(x)\`], // 2026-05-08
+[String.raw\`x^2\\arctan(x)\`], // 2026-05-09
+[String.raw\`\\frac{x}{e^x}\`], // 2026-05-10
+[String.raw\`\\frac{1}{x^5-x^3-x^2+1}\`], // 2026-05-11
+[String.raw\`xe^{x^2}\`], // 2026-05-12
+[String.raw\`\\frac{\\cos^3(x)}{\\sin^4(x)}\`], // 2026-05-13
+[String.raw\`x^2e^x\`], // 2026-05-14
+[String.raw\`\\frac{1+x}{1+\\sqrt{x}}\`], // 2026-05-15
+[String.raw\`\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/683690639_1570874408377269_3043730970659902231_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ig_cache_key=Mzg5ODI2MDY2NjEzMDIyMDE5NA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=dzq8ehMcfecQ7kNvwFHqD3b&_nc_oc=AdocHGSw8LjjSiDX5iUEOxdlq2X2ikoq-OW3kJFll0mzz6MGGCSwbxAS4jKKa3AQobVP-gCojqMF0WNGcgD8BVfT&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=KA9fV_8A9wPSTECiRrfxXw&_nc_ss=7b689&oh=00_AQNYE1ppDM5rQZOQoN-lVdOR8ij5Roas1FcIJGjpLDWZMQ&oe=6AE601A3"], // 2026-05-16
+[String.raw\`\\frac{1}{\\sqrt{x}}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/684221632_1570874908377219_7968652772014244122_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=Mzg5ODk4NTQzMjQ0OTg4MjMzMg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=a74VopfK74sQ7kNvwHNPk10&_nc_oc=Adp-sRasDB3Dkuc3PHWcqGoebxrOllq1i2MMr0lr5o2leqVDCdHsXb6KFDb5L7zksWHmdkaYFrJ976FmBF7KjomD&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=VikA2G9RF-K0Y81hAg8bxg&_nc_ss=7b689&oh=00_AQPbKK0_bi9gPDbwBNvqCj97y-RYl3Tp-dXmjmxruwt7KA&oe=6AE62A93"], // 2026-05-17
+[String.raw\`\\frac{x^2+3x+4}{x^3+8}\`], // 2026-05-18
+[String.raw\`\\frac{1}{(x-1)(x-2)}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/686991457_1570875378377172_7664120505403123412_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ig_cache_key=MzkwMDQzNDk4OTMwNTMwOTUzNg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=RQ7u-Ltdj8wQ7kNvwHbrvP0&_nc_oc=AdoPfwFzxYVoZ0_xpjCJVHOUmUXuAxwme5ciZq_QfBKUXdSKQN9XOH1RSZK2n3iB-F8I0SlbE5eT9c5DQDCY4bL_&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=IWo4hNwL6pt9XKttA_vB4w&_nc_ss=7b689&oh=00_AQNUlHMfT1z-SXbb-iam_SbIjcnnMdPtrX-VZ5AAJy58vA&oe=6AE61036"], // 2026-05-19
+[String.raw\`\\frac{1}{4x^2+9}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/686120049_1570876051710438_60515176025283432_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=107&ig_cache_key=MzkwMTE1OTc0ODg1NDg3NzYyMQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=jMHs2x7bqIsQ7kNvwHtgRUQ&_nc_oc=Adp5IAp7DzCm-S48e7KsDIgr5iGhyTYPg9zlMCFnM8enRrzR_IPN301G1pQ9wi7LHDGg743t0Bqy5Lobd1W3hMVN&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=FQsjCGmGqs8WjMMJrwvVOQ&_nc_ss=7b689&oh=00_AQPIvIr0KGqZvunqaDhQElhmH_2HhyzHwbrTk1sGJZMGPg&oe=6AE5F519"], // 2026-05-20
+[String.raw\`\\sqrt{\\frac{1-x}{1+x}}\`], // 2026-05-21
+[String.raw\`\\tan(x)\`], // 2026-05-22
+[String.raw\`\\frac{x}{x+1}\`], // 2026-05-23
+[String.raw\`\\frac{x+1}{x}\`], // 2026-05-24
+[String.raw\`x^x(1+\\ln(x))\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/679835547_1567056965425680_675738403362614529_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=108&ig_cache_key=MzkwNDc4MzYzNzI4MzgxMDAzMQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=dn3zc0VtdEIQ7kNvwEI6zvJ&_nc_oc=AdrthYOKkRze18pbFkFjUJgAQd8d77qO-Uo34FVPEIEXdX0EO5CgykLs4A3FIp5QUhrpDA833c12fod80Jp2TsiA&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=WCrTYcjrJ3EIMgnfdNjBdQ&_nc_ss=7b689&oh=00_AQNNgenOB0MxStgARK9o0pq3vZEtWUAUWxRDyzsVHjUcsw&oe=6AE61F36"], // 2026-05-25
+[String.raw\`\\frac{1}{x^2}\`], // 2026-05-26
+[String.raw\`x^2\\ln(x)\`], // 2026-05-27
+[String.raw\`\\frac{1}{(1-x)^2}\`], // 2026-05-28
+[String.raw\`\\frac{1}{x\\ln^2(x)}\`], // 2026-05-29
+[String.raw\`\\frac{1}{(ax+b)^n}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/691445717_1577165431081500_3532887243414809753_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ig_cache_key=MzkwODQwNzUxNDIxMTU1NTUwMw%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=NVB5L3gg11MQ7kNvwHVDmch&_nc_oc=AdpFhm75g-OV302QDJtciMSRY5ZD3e2ZkivCHez6C2c7ddjD1ONALQzzv3W5RY7ImeZQEwoaLiTLwB1ye3568WBV&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=5Ld42aZFlOZpOKec5IjaWw&_nc_ss=7b689&oh=00_AQOwTcGOPRq-_BKBtLvmPDkMdC2DsAi5j7-wOBDNkbGkmQ&oe=6AE60E9A"], // 2026-05-30
+[String.raw\`x^{-\\frac{2}{3}}\`], // 2026-05-31
+
+[String.raw\`\\frac{\\ln(x)\\sin(\\arcsin(x))}{\\sqrt{1-x^2}}\`], // 2026-06-01
+[String.raw\`\\frac{\\sin(x)}{\\cos^5(x)}\`], // 2026-06-02
+[String.raw\`\\frac{1}{(1-x)^2}\`], // 2026-06-03
+[String.raw\`\\frac{1}{4+x^2}\`], // 2026-06-04
+[String.raw\`\\cos(x)e^{\\sin(x)}\`], // 2026-06-05
+[String.raw\`\\frac{1}{x-x\\ln(x)}\`], // 2026-06-06
+[String.raw\`\\frac{x^2}{x-5}\`], // 2026-06-07
+[String.raw\`\\sin(\\ln(e^{\\arcsin(x/\\sqrt{1-x^2})}))e^{\\sqrt{1-x^2}}\\sin(\\sqrt{1-x^2})\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/700761929_1587454456719264_7271168841001827063_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=MzkxNDkzMDQ5OTgzNDkwODQzMw%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=y7vg51PqFikQ7kNvwGuGt69&_nc_oc=AdoYSqd6DcZWE-AvV1_lWcimUugQyPUZ2o4-SHbapXNpX1cSPYK02EMYLKx5SKNOWRFyGECJ4yYZcyRy3dweIMjD&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=5m-kYkolkFRRIYSJQ8uU5w&_nc_ss=7b689&oh=00_AQO_uGAU-eP0Yj9UH-7QnsmDZ-vbcYDqaQ0use7kQhRnZA&oe=6AE5F406"], // 2026-06-08
+[String.raw\`\\frac{\\sqrt{\\ln(x)}}{x}\`], // 2026-06-09
+[String.raw\`\\sqrt{1-x^2}\`], // 2026-06-10
+[String.raw\`\\sin^3(x)\`], // 2026-06-11
+[String.raw\`\\cos^3(x)\`], // 2026-06-12
+[String.raw\`e^{ax+b}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/701246528_1587441423387234_4573887274275354660_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=100&ig_cache_key=MzkxODU1NDM4NTQwNDI0ODQ1Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=mSDvpJLfs2gQ7kNvwHsFd8w&_nc_oc=AdrwPy93cEjL44QCsfHM6nW2nZHM7Oejbrxr2fuFP2xh79jMVWSReZPclyOw4iC9ox9OCt0OOlCEVvjxWnknueza&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=7uFmaEAdPgBjUT0P3-XI9g&_nc_ss=7b689&oh=00_AQNK6aKeH7DZbIkhp_s5T7JfCxf1hhrjXF0zKC990fh7Yg&oe=6AE62AB3"], // 2026-06-13
+[String.raw\`xe^x\`], // 2026-06-14
+[String.raw\`\\frac{2\\sqrt{x}-1}{2x\\sqrt{x}-2x}\`], // 2026-06-15
+[String.raw\`\\frac{x+1}{\\sqrt{x-1}}\`], // 2026-06-16
+[String.raw\`\\ln(1-x^2)\`], // 2026-06-17
+[String.raw\`x\\cos(x)\`], // 2026-06-18
+[String.raw\`\\frac{ax}{x^2-bx}\`], // 2026-06-19
+[String.raw\`\\frac{1}{x^2+2x+1}\`], // 2026-06-20
+[String.raw\`\\frac{1}{x^2+2x+2}\`], // 2026-06-21
+[String.raw\`\\frac{x^3+x^2+1}{x^6-1}\`], // 2026-06-22
+[String.raw\`\\frac{\\ln(1+x^2)}{x^2}\`], // 2026-06-23
+[String.raw\`\\ln^2(x)\`], // 2026-06-24
+[String.raw\`x^2\\sin(x)\`], // 2026-06-25
+[String.raw\`x^2\\cos(x)\`], // 2026-06-26
+[String.raw\`\\ln(ax+b)\`], // 2026-06-27
+[String.raw\`\\sqrt{x}\`], // 2026-06-28
+[String.raw\`\\tan(x)\\sqrt{2+\\sqrt{4+\\cos(x)}}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/723883584_1616777970453579_4619398791154242451_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=100&ig_cache_key=MzkzMDE1MDc5MzM1MzM3MTc2Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=e2WjTfA-UrcQ7kNvwHyERQq&_nc_oc=Adps4b_ttIpEI6hY9HD-EZsaLvMkqUdwQ0_Y9DHePCCvWnmtfe1kSA9ubl5uTI-FgNUMObClY3zb1wvmqoIyfrKq&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=8j7qz7mbfkV5jJ_5gyUVzw&_nc_ss=7b689&oh=00_AQOw725Z0gezbUDUOYLSrCe0fluds3y3XdPeSihaesN-6g&oe=6AE622BB"], // 2026-06-29
+[String.raw\`\\frac{1}{(x+1)^2}\`], // 2026-06-30
+
+[String.raw\`\\frac{x^3}{\\sqrt{1-x^2}}\`], // 2026-07-01
+[String.raw\`\\frac{1}{1-x^2}\`], // 2026-07-02
+[String.raw\`x^{-\\frac{3}{2}}\`], // 2026-07-03
+[String.raw\`\\sin(\\ln(x))\`], // 2026-07-04
+[String.raw\`\\cos(\\ln(x))\`], // 2026-07-05
+[String.raw\`\\frac{x+3}{(x^2-9)\\sqrt{x^2+2x+2}}\`], // 2026-07-06
+[String.raw\`\\frac{\\sin(x)}{\\cos(x)}\`], // 2026-07-07
+[String.raw\`\\frac{\\cos(x)}{\\sin(x)}\`], // 2026-07-08
+[String.raw\`\\frac{\\arctan(x)}{1+x^2}\`], // 2026-07-09
+[String.raw\`\\frac{e^x}{e^x+1}\`], // 2026-07-10
+[String.raw\`\\frac{1}{x^2-4}\`], // 2026-07-11
+[String.raw\`\\sqrt{x}\\ln(x)\`], // 2026-07-12
+[String.raw\`\\frac{x^2-1}{x^4+3x^2+1}\\arctan(\\frac{x^2+1}{x})\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/719876321_1616781860453190_1258229991107862857_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=105&ig_cache_key=Mzk0MDI5NzY1MjAzODQyMjk0NA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=ti8vkMKao-MQ7kNvwGiq2sY&_nc_oc=AdqV2TfIk8JgDw8U98q1f2m7p08ksgGCrBMLx-frVX4DIemmkNwLh4IYQyD-13WGi9yBTqt3dMlFSSPiM9qIX8ZG&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=oP299bQejMEN2ho5ODbNBQ&_nc_ss=7b689&oh=00_AQOZojyTGbf_F2Wh1LhvvDho-NqlQGzu1U2-LAKUSfgy8A&oe=6AE5F366"], // 2026-07-13
+[String.raw\`\\frac{x-1}{\\sqrt{x}}\`], // 2026-07-14
+[String.raw\`\\frac{x}{\\sqrt{1-x^2}}\`], // 2026-07-15
+[String.raw\`\\ln(\\sqrt{x})\`], // 2026-07-16
+[String.raw\`\\frac{x^3}{x^8+5}\`], // 2026-07-17
+[String.raw\`e^{\\sqrt{x}}\`], // 2026-07-18
+[String.raw\`\\tan^5(x)\`], // 2026-07-19
+[String.raw\`\\frac{x\\arcsec(x)}{(x^2-1)^4}\`], // 2026-07-20
+[String.raw\`e^x\\sin(x)\\cos(x)\`], // 2026-07-21
+[String.raw\`\\frac{x+2}{x^2+2x+5}\`], // 2026-07-22
+[String.raw\`\\frac{\\sin(x)-\\cos(x)}{\\sin(x)+\\cos(x)}\`], // 2026-07-23
+[String.raw\`\\ln(1+x^2)\`], // 2026-07-24
+[String.raw\`\\frac{e^{1/x^3}}{x^4}\`], // 2026-07-25
+[String.raw\`\\frac{1}{x^4-1}\`], // 2026-07-26
+[String.raw\`x^2\\arctan(x)\\ln(x^2+1)\`], // 2026-07-27
+[String.raw\`\\frac{1}{\\sin(x)\\cos(x)}\`], // 2026-07-28
+[String.raw\`\\frac{\\cos(\\ln(x))}{x}\`], // 2026-07-29
+[String.raw\`\\frac{\\sin(\\ln(x))}{x}\`], // 2026-07-30
+[String.raw\`\\frac{x^2}{\\sqrt{1-x^2}}\`], // 2026-07-31
+
+[String.raw\`\\frac{\\sin(x)}{\\sqrt{1+\\cos(x)}}\`], // 2026-08-01
+[String.raw\`e^{ax}\\sin(bx)\`], // 2026-08-02
+[String.raw\`\\arctan(x)+\\arctan\\left(\\frac{1}{x}\\right)\`], // 2026-08-03
+[String.raw\`\\sin(x)\\cos(x)\`], // 2026-08-04
+[String.raw\`\\sin(x)\\cos^{2}(x)\`], // 2026-08-05
+[String.raw\`\\sin^{2}(x)\\cos(x)\`], // 2026-08-06
+[String.raw\`\\sin^{2}(x)\\cos^{2}(x)\`], // 2026-08-07
+[String.raw\`\\sin^{2}(x)\\cos^{3}(x)\`], // 2026-08-08
+[String.raw\`\\sin^{3}(x)\\cos^{3}(x)\`], // 2026-08-09
+[String.raw\`\\frac{25x^{4}-4x^{2}}{\\sqrt{25x^{2}-4}}\`], // 2026-08-10
+[String.raw\`x\\arcsin(x^{2})\`], // 2026-08-11
+[String.raw\`\\frac{1}{\\sqrt{1-x^{2}}}\`], // 2026-08-12
+[String.raw\`\\frac{1}{\\sqrt{9-4x^{2}}}\`], // 2026-08-13
+[String.raw\`\\frac{\\arcsin(x)}{\\sqrt{1-x^{2}}}\`], // 2026-08-14
+[String.raw\`\\frac{\\arccos(x)}{\\sqrt{1-x^{2}}}\`], // 2026-08-15
+[String.raw\`\\frac{1}{x\\ln(x)}\`], // 2026-08-16
+[String.raw\`\\frac{1-7\\cos^{2}(x)}{\\sin^{7}(x)\\cos^{2}(x)}\`], // 2026-08-17
+[String.raw\`\\frac{\\ln(\\tan(x))}{\\sin(x)\\cos(x)}\`], // 2026-08-18
+[String.raw\`\\frac{x^{3}}{1+x^{2}}\`], // 2026-08-19
+[String.raw\`\\frac{x^{3}}{1+x^{4}}\`], // 2026-08-20
+[String.raw\`\\frac{e^{\\frac{1}{x^{n}}}}{x^{n+1}}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/762903644_1662569752541067_1160047825345236691_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ig_cache_key=Mzk2ODU2Mzk3MjQyMTE3NjIzMQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=Eog68U4otIoQ7kNvwHHlwnz&_nc_oc=Adrlg7K5ZnMHX22QY30jwTj0qXhKWo1ASz14C86IzS5DYZuLp4W2lRN0Z4HG_ZYjmZf9Q9ADN3m9yEWPJfZBSzPs&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=enZx0jLiPZBwbJebCSby6g&_nc_ss=7b689&oh=00_AQPjqMLEOq13iAKZggj1HsonDqsCYRyN3sESs7_DXEkGIg&oe=6AE61016"], // 2026-08-21
+[String.raw\`\\frac{x^{2}}{\\sqrt{1-x}}\`], // 2026-08-22
+[String.raw\`x^{\\frac{1}{3}}\`], // 2026-08-23
+[String.raw\`\\frac{e^{x}+x+2}{\\sqrt{e^{x}+x^{2}}}\`], // 2026-08-24
+[String.raw\`\\frac{\\sin(x)}{1+\\cos^{2}(x)}\`], // 2026-08-25
+[String.raw\`\\frac{\\cos(x)}{1+\\sin^{2}(x)}\`], // 2026-08-26
+[String.raw\`\\frac{e^{4x}}{e^{4x}+5}\`], // 2026-08-27
+[String.raw\`e^{4x}\`], // 2026-08-28
+[String.raw\`\\sin(x)(1+\\cos(x))\`], // 2026-08-29
+[String.raw\`x\\arctan^{2}(x)\`], // 2026-08-30
+[String.raw\`\\frac{5-5\\sin^{2}(x)+4\\sin(4x)}{5\\sin(2x)+4}\`], // 2026-08-31
+
+[String.raw\`\\frac{\\sqrt{1+x^{2}}}{x^{2}}\`], // 2026-09-01
+[String.raw\`x\\arccos(x)\`], // 2026-09-02
+[String.raw\`x\\arcsin(x)\`], // 2026-09-03
+[String.raw\`\\frac{1}{(1+x^{2})^{2}}\`], // 2026-09-04
+[String.raw\`\\frac{1+x^{2}}{\\sqrt{x}}\`], // 2026-09-05
+[String.raw\`\\frac{1+\\cos^{2}(x)}{1+\\sin^{6}(x)}\`], // 2026-09-06
+[String.raw\`\\frac{\\cos^{3}(x)}{\\sqrt{\\sin(x)}}\`], // 2026-09-07
+[String.raw\`x\\ln^{2}(x)\`], // 2026-09-08
+[String.raw\`\\frac{e^{x}+1}{e^{x}+x}\`], // 2026-09-09
+[String.raw\`(ax+b)^{2}\`], // 2026-09-10
+[String.raw\`\\frac{x}{4+x^{4}}\`], // 2026-09-11
+[String.raw\`\\frac{\\sqrt{1-x}}{\\sqrt{x}}\`], // 2026-09-12
+[String.raw\`-\\frac{\\sqrt{1-\\cos(2x)}}{\\sqrt{2}}e^{\\sqrt{\\cos(2x)-\\cos^{2}(x)+1}}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/786070070_1685493603582015_3834144065023692512_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=Mzk4NTIzMzc3ODUxOTMzMjMzMA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=xFFv97pni-QQ7kNvwGRheMW&_nc_oc=AdoLotfFVcyNWdHTu1f3bo26HvT4g7HkzJKPhd8oQWqUdPQtCIfkURvFm2a6FtFdOfTMf4kLGt-2XJaOutLw6Nkn&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=cKOWsd1XJdm3qp00sS_KNg&_nc_ss=7b689&oh=00_AQNr1dSRVUxS8EB62ETD-NTHVVA-pmZlmbVcU9tcywaNBQ&oe=6AE5F789"], // 2026-09-13
+[String.raw\`\\ln(1-x)\`], // 2026-09-14
+[String.raw\`\\frac{1}{x^{2}+x}\`], // 2026-09-15
+[String.raw\`\\frac{1}{x(1+\\ln^{2}(x))}\`], // 2026-09-16
+[String.raw\`e^{\\arcsin(x)}\`], // 2026-09-17
+[String.raw\`\\frac{2}{2x+7}\`], // 2026-09-18
+[String.raw\`\\frac{x^{5}}{\\sqrt{1-x^{3}}}\`], // 2026-09-19
+[String.raw\`\\frac{(x-1)^{2}}{x+1}\`], // 2026-09-20
+[String.raw\`\\frac{x^{2}-x}{\\sqrt[3]{x}-\\sqrt{x}}\`], // 2026-09-21
+[String.raw\`\\frac{1}{x\\ln^{4}(x)}\`], // 2026-09-22
+[String.raw\`\\frac{x}{x^{2}+4x+5}\`], // 2026-09-23
+[String.raw\`\\frac{6x^{3}-2x}{x^{2}}\`], // 2026-09-24
+[String.raw\`\\frac{x^{2}}{\\sqrt{1-x^{2}}}\`], // 2026-09-25
+[String.raw\`\\frac{\\sqrt{1+x}}{\\sqrt{1-x^2}}\`], // 2026-09-26
+[String.raw\`\\frac{2x}{x^2+8}\`], // 2026-09-27
+[String.raw\`\\frac{\\cos(x/2)}{\\sqrt{1+\\sin(x)}}\`], // 2026-09-28
+[String.raw\`x^3\\sqrt{x^2-1}\`], // 2026-09-29
+[String.raw\`\\frac{x^3}{\\sqrt{1+x^2}}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/825614911_1718639353600773_374915668476729646_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ig_cache_key=Mzk5NzU1NDk1ODYwMTMwMDE4NA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=vTr_cu8japEQ7kNvwFsisoj&_nc_oc=AdpNBG4WMsUl1nZM8tAKSKsoBKhmcTcEaZci2nmY7CKrcyV_5vNPJrDlJp1w2LlLJ3JgMQUN4kNoeUvzYs5YoxgP&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=MdlFmpRmNHWndo-3OPj0vQ&_nc_ss=7b689&oh=00_AQMYwxur0a6Yr3jUbjf2Oz-xeqrh77stydj22kw5jHJNYw&oe=6AE61242"], // 2026-09-30
+
+[String.raw\`(3x+7)^5\`], // 2026-10-01
+[String.raw\`\\frac{1}{(x-3)^{5/2}}\`], // 2026-10-02
+[String.raw\`\\frac{1}{\\sqrt{x+1}-\\sqrt{x-1}}\`], // 2026-10-03
+[String.raw\`\\frac{x^2}{1+x^2}\`], // 2026-10-04
+[String.raw\`\\frac{x^2+1}{(1-x^2)\\sqrt{1+x^4}}\`], // 2026-10-05
+[String.raw\`\\frac{x+3}{x-6}\`], // 2026-10-06
+[String.raw\`\\frac{1}{2x^2+2x+1}\`], // 2026-10-07
+[String.raw\`\\frac{\\ln(x)}{\\sqrt{x}}\`], // 2026-10-08
+[String.raw\`x^3\\sqrt{x^4+7}\`], // 2026-10-09
+[String.raw\`\\frac{x^2-3x-5}{x-2}\`], // 2026-10-10
+[String.raw\`\\frac{\\ln(x)}{x^3}\`], // 2026-10-11
+[String.raw\`x^{\\frac{x-1}{\\ln(x)}}\`], // 2026-10-12
+[String.raw\`\\frac{x}{1+x^4}\`], // 2026-10-13
+[String.raw\`\\sqrt{1+\\sqrt{x}}\`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/827995602_1718646410266734_8267943167601907745_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=105&ig_cache_key=NDAwNzcwMTc4OTU3ODE5NTIwNg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=ewf8bLMh-i8Q7kNvwHlu4Sa&_nc_oc=AdofIHLBTv77JyNComiMw0Kaci2-CmO50nlL6dBkpTYhVqMDQ43P4hVn-qEZLnaUaUVjAU2mFDS7YSLLk-zYVy2F&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=vquww4X39cIofLxUVzdsrw&_nc_ss=7b689&oh=00_AQMFBSHUQFK7j21vHQ5vW1D7F-TvEUPzwHzmSY9y7l324g&oe=6AE5F31C"], // 2026-10-14
+[String.raw\`\\ln(x+\\sqrt{x^2-1})\`], // 2026-10-15
+[String.raw\`\\frac{\\sin(x)}{e^{\\cos(x)}}\`], // 2026-10-16
+[String.raw\`\\frac{\\cos(x)}{e^{\\sin(x)}}\`], // 2026-10-17
+[String.raw\`\\frac{1}{x+\\sqrt{x}}\`], // 2026-10-18
+[String.raw\`\\left(\\frac{x-1}{x^2+1}\\right)^2 e^x\`], // 2026-10-19
+[String.raw\`\\sin(2x)\\cos(x)\`], // 2026-10-20
+[String.raw\`\\ln(x+\\sqrt{x})\`], // 2026-10-21
+[String.raw\`\\frac{\\arctan(\\ln(x))}{x}\`], // 2026-10-22
+[String.raw\`\\sqrt{\\frac{\\ln(x+\\sqrt{1+x^2})}{1+x^2}}\`], // 2026-10-23
+[String.raw\`\\frac{x^2-1}{x^2+1}\`], // 2026-10-24
+[String.raw\`\\sqrt{x}\\ln(\\sqrt{x})\`], // 2026-10-25
+[String.raw\`\\frac{\\sqrt{x}(x^2+x+1)}{\\sqrt{x+1}\\sqrt{x^4+x^2+1}}\`], // 2026-10-26
+]`;
+
+    let linesData = [];
+    let igIndices = []; // indices into linesData that have Instagram URLs
+    let currentPos = 0; // index in igIndices
+
+    const inputArea = document.getElementById('inputArea');
+    const outputArea = document.getElementById('outputArea');
+    const latexInput = document.getElementById('latexInput');
+    const mathPreview = document.getElementById('mathPreview');
+    const postImg = document.getElementById('postImg');
+    const openImgLink = document.getElementById('openImgLink');
+    const counterText = document.getElementById('counterText');
+    const rowSelect = document.getElementById('rowSelect');
+    const diffBadge = document.getElementById('diffBadge');
+    const dateCommentText = document.getElementById('dateCommentText');
+    const origDisplay = document.getElementById('origDisplay');
+    const toast = document.getElementById('toast');
+
+    // Zoom image toggle
+    postImg.addEventListener('click', () => {
+      postImg.classList.toggle('zoomed');
+    });
+
+    // Proxy retry
+    document.getElementById('btnRetryProxy').addEventListener('click', () => {
+      if (igIndices.length === 0) return;
+      const row = linesData[igIndices[currentPos]];
+      const proxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(row.url);
+      postImg.src = proxyUrl;
+    });
+
+    // Image error fallback
+    postImg.onerror = function() {
+      const currentSrc = postImg.src;
+      if (!currentSrc.includes('weserv.nl')) {
+        const row = linesData[igIndices[currentPos]];
+        postImg.src = 'https://images.weserv.nl/?url=' + encodeURIComponent(row.url);
+      }
+    };
+
+    function parseInput(text) {
+      const rawLines = text.split(/\r?\n/);
+      linesData = [];
+      igIndices = [];
+
+      rawLines.forEach((line, idx) => {
+        if (line.trim() === '') {
+          linesData.push({ type: 'blank', raw: line });
+          return;
+        }
+
+        // Match array row with String.raw`...`
+        let m = line.match(/^(\s*\[\s*)(String\.raw\s*`)([\s\S]*?)(`)([\s\S]*?)(\]\s*,?[\s\S]*)$/);
+        if (!m) {
+          m = line.match(/^(\s*\[\s*)(`)([\s\S]*?)(`)([\s\S]*?)(\]\s*,?[\s\S]*)$/);
+        }
+        if (!m) {
+          m = line.match(/^(\s*\[\s*)(String\.raw\s*['"]|['"])([\s\S]*?)(['"])([\s\S]*?)(\]\s*,?[\s\S]*)$/);
+        }
+
+        if (!m) {
+          linesData.push({ type: 'other', raw: line });
+          return;
+        }
+
+        const prefix = m[1];
+        const rawTag = m[2];
+        const integrand = m[3];
+        const closeQuote = m[4];
+        const middle = m[5];
+        const suffix = m[6]; // includes ], // comment
+
+        let hasUrl = false;
+        let url = '';
+
+        const commaMatch = middle.match(/^\s*,\s*([\s\S]*)$/);
+        if (commaMatch) {
+          const rawUrl = commaMatch[1].trim();
+          if (rawUrl.length > 0) {
+            hasUrl = true;
+            const qm = rawUrl.match(/^(['"`])(.*)\1$/);
+            url = qm ? qm[2] : rawUrl;
+          }
+        }
+
+        // Extract comment from suffix
+        let comment = '';
+        const cm = suffix.match(/\/\/\s*(.*)$/);
+        if (cm) comment = cm[1].trim();
+
+        const item = {
+          type: 'row',
+          raw: line,
+          prefix,
+          rawTag,
+          integrand,
+          edited: integrand,
+          closeQuote,
+          middle,
+          suffix,
+          hasUrl,
+          url,
+          comment,
+        };
+
+        const itemIdx = linesData.length;
+        linesData.push(item);
+        if (hasUrl) {
+          igIndices.push(itemIdx);
+        }
+      });
+    }
+
+    function generateOutput() {
+      return linesData.map(item => {
+        if (item.type !== 'row') return item.raw;
+        return `${item.prefix}${item.rawTag}${item.edited}${item.closeQuote}${item.middle}${item.suffix}`;
+      }).join('\n');
+    }
+
+    function renderRow() {
+      if (igIndices.length === 0) {
+        counterText.textContent = 'No Instagram rows found';
+        return;
+      }
+
+      if (currentPos < 0) currentPos = 0;
+      if (currentPos >= igIndices.length) currentPos = igIndices.length - 1;
+
+      const row = linesData[igIndices[currentPos]];
+
+      counterText.textContent = `Row ${currentPos + 1} of ${igIndices.length}`;
+      rowSelect.value = currentPos;
+      dateCommentText.textContent = row.comment ? `Date: ${row.comment}` : '';
+      origDisplay.textContent = row.integrand ? `Original: ${row.integrand}` : '(original empty)';
+
+      // Photo
+      postImg.src = row.url;
+      openImgLink.href = row.url;
+      postImg.classList.remove('zoomed');
+
+      // LaTeX
+      latexInput.value = row.edited;
+      renderMath(row.edited);
+
+      updateDiffBadge(row);
+    }
+
+    function renderMath(tex) {
+      if (!tex || tex.trim() === '') {
+        mathPreview.innerHTML = '<span style="color:var(--muted); font-size:1rem;">(empty integrand - please fill in from photo)</span>';
+        return;
+      }
+      try {
+        katex.render(`\\int \\left( ${tex} \\right) dx`, mathPreview, { displayMode: true, throwOnError: false });
+      } catch (e) {
+        mathPreview.innerHTML = `<span style="color:var(--danger);">${tex}</span>`;
+      }
+    }
+
+    function updateDiffBadge(row) {
+      if (row.edited !== row.integrand) {
+        diffBadge.className = 'badge badge-mod';
+        diffBadge.textContent = 'Modified';
+      } else {
+        diffBadge.className = 'badge badge-same';
+        diffBadge.textContent = 'Unchanged';
+      }
+    }
+
+    function syncOutput() {
+      outputArea.value = generateOutput();
+      updateRowSelectOptions();
+    }
+
+    function updateRowSelectOptions() {
+      rowSelect.innerHTML = '';
+      igIndices.forEach((lineIdx, i) => {
+        const r = linesData[lineIdx];
+        const opt = document.createElement('option');
+        opt.value = i;
+        const mod = r.edited !== r.integrand ? '✎ ' : '';
+        const date = r.comment ? ` [${r.comment}]` : '';
+        const preview = r.edited || '(empty)';
+        opt.textContent = `${mod}#${i + 1}${date}: ${preview}`;
+        rowSelect.appendChild(opt);
+      });
+      rowSelect.value = currentPos;
+    }
+
+    function showToast(msg) {
+      toast.textContent = msg || 'Copied to clipboard!';
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 2000);
+    }
+
+    // LaTeX typing live update
+    latexInput.addEventListener('input', (e) => {
+      if (igIndices.length === 0) return;
+      const row = linesData[igIndices[currentPos]];
+      row.edited = e.target.value;
+      renderMath(row.edited);
+      updateDiffBadge(row);
+      syncOutput();
+    });
+
+    // Quick symbol buttons
+    document.querySelectorAll('.sym-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const s = btn.getAttribute('data-s');
+        const start = latexInput.selectionStart;
+        const end = latexInput.selectionEnd;
+        const val = latexInput.value;
+        latexInput.value = val.substring(0, start) + s + val.substring(end);
+        latexInput.focus();
+        latexInput.selectionStart = latexInput.selectionEnd = start + (s.includes('}') ? s.indexOf('}') : s.length);
+        latexInput.dispatchEvent(new Event('input'));
+      });
+    });
+
+    // Prev / Next
+    document.getElementById('btnPrev').addEventListener('click', () => {
+      if (currentPos > 0) {
+        currentPos--;
+        renderRow();
+      }
+    });
+
+    document.getElementById('btnNext').addEventListener('click', () => {
+      if (currentPos < igIndices.length - 1) {
+        currentPos++;
+        renderRow();
+      }
+    });
+
+    rowSelect.addEventListener('change', (e) => {
+      currentPos = parseInt(e.target.value, 10);
+      renderRow();
+    });
+
+    // Revert
+    document.getElementById('btnRevert').addEventListener('click', () => {
+      if (igIndices.length === 0) return;
+      const row = linesData[igIndices[currentPos]];
+      row.edited = row.integrand;
+      latexInput.value = row.integrand;
+      latexInput.dispatchEvent(new Event('input'));
+      showToast('Reverted to original');
+    });
+
+    // Copy buttons
+    function copyOut() {
+      navigator.clipboard.writeText(outputArea.value).then(() => {
+        showToast('Copied output to clipboard!');
+      });
+    }
+    document.getElementById('btnCopy').addEventListener('click', copyOut);
+    document.getElementById('btnCopyInner').addEventListener('click', copyOut);
+
+    // Reparse
+    document.getElementById('btnReparse').addEventListener('click', () => {
+      parseInput(inputArea.value);
+      currentPos = 0;
+      updateRowSelectOptions();
+      renderRow();
+      syncOutput();
+      showToast('Reparsed!');
+    });
+
+    // Accordion
+    document.getElementById('ioToggle').addEventListener('click', () => {
+      const box = document.getElementById('ioBox');
+      box.classList.toggle('io-collapsed');
+      document.getElementById('ioArrow').innerHTML = box.classList.contains('io-collapsed') ? '&#9660; Expand' : '&#9650; Collapse';
+    });
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+      if (document.activeElement === inputArea || document.activeElement === outputArea) return;
+
+      if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        document.getElementById('btnPrev').click();
+      } else if (e.altKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        document.getElementById('btnNext').click();
+      }
+    });
+
+    // Init
+    inputArea.value = INITIAL_INPUT;
+    parseInput(INITIAL_INPUT);
+    updateRowSelectOptions();
+    renderRow();
+    syncOutput();
+  </script>
+</body>
+</html>

@@ -1,0 +1,789 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Integrle</title>
+  <meta property="og:title" content="Integrle" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://integrle.pages.dev/" />
+  <meta property="og:image" content="https://integrle.pages.dev/favicon.png" />
+  <meta property="og:description" content="An integral a day keeps the doctor away" />
+  <link rel="icon" type="image/x-icon" href="./favicon.png">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
+
+  <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> -->
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> -->
+  <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script> -->
+  <style>
+    body {
+      margin: 0;
+    }
+
+    #calculator {
+      width: 100%;
+      height: 70vh;
+    }
+
+    @media (max-width: 768px) {
+      #calculator {
+        height: 68vh;
+      }
+
+      #integrand {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-light border-bottom justify-content-between">
+    <!-- <a class="navbar-brand">Integrle</a> -->
+    <div></div>
+    <!-- <form class="form-inline">
+        <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Statistics</button>
+      </form> -->
+    <div class='d-flex'>
+
+      <div id='howToPlayModalScrollableContainer' class='mr-2'>
+        <!-- Button trigger modal -->
+        <!-- <button type="button" class="btn btn-outline-dark" data-toggle="modal" data-target="#exampleModalScrollable">
+            Launch demo modal
+          </button> -->
+        <button class="btn btn-outline-primary my-2 my-sm-0" data-toggle="modal"
+          data-target="#howToPlayModalScrollable">How to play</button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="howToPlayModalScrollable" tabindex="-1" role="dialog"
+          aria-labelledby="howToPlayModalScrollableTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="howToPlayModalScrollableTitle">How to play Integrle</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <ol>
+                  <li>
+                    Solve the integral.
+                    \[
+                    \int 2x+5 \ dx = \boxed{ x^2 + 5x + C }
+                    \]
+                  </li>
+                  <li>
+                    Enter your answer within the parentheses.
+                    \[
+                    g(x) = \frac{d}{dx} \left(\boxed{ x^2 + 5x + C }\right)
+                    \]
+                  </li>
+                  <li>
+                    The graphs will match if you're correct.
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+      <div id='statisticsModalScrollableContainer' class='mr-2'>
+        <button class="btn btn-outline-primary my-2 my-sm-0" data-toggle="modal"
+          data-target="#statisticsModalScrollable">Stats</button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="statisticsModalScrollable" tabindex="-1" role="dialog"
+          aria-labelledby="statisticsModalScrollableTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="statisticsModalScrollableTitle">Stats</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body" id='statisticsContent'>
+                ...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+
+      <div id='settingsModalScrollableContainer'>
+        <button class="btn btn-outline-primary my-2 my-sm-0" data-toggle="modal"
+          data-target="#settingsModalScrollable">Settings</button>
+
+        <!-- Modal -->
+        <div class="modal fade" id="settingsModalScrollable" tabindex="-1" role="dialog"
+          aria-labelledby="settingsModalScrollableTitle" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="settingsModalScrollableTitle">Settings</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body" id='settingsContent'>
+
+                <div class="custom-control custom-switch">
+                  <input type="checkbox" class="custom-control-input" id="darkThemeSwitch" disabled>
+                  <label class="custom-control-label" for="darkThemeSwitch">Dark theme (to be implemented)</label>
+                </div>
+
+                <br>
+                Integrals are from <a href='https://www.instagram.com/integralsforyou/'
+                  target='_blank'>@integralsforyou</a>
+                <br>
+                Feedback: "josephj" + str(8000-9*9) + "@gmail.com"
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </nav>
+
+  <div id='integrand' class='p-2 container'></div>
+
+  <div id="calculator"></div>
+
+
+
+  <script src="https://www.desmos.com/api/v1.10/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
+  <script>
+    // # IMPORTANT
+    // # How to add more integrands
+    // 1. Using Muse, scrape from integralsforyou, using the instagram descriptions,
+    //    in the following format. Note image urls for any potentially incorrect integrands.
+    //    Note that we're saving the date as well.
+    // ```js
+    // [
+    //   [String.raw`x^2`],  // YYYY-MM-DD  // no \int or dx
+    //   [String.raw`x^2`],  // YYYY-MM-DD
+    //   [String.raw`x^2`, instagram image url],  // YYYY-MM-DD  // image url for potentially incorrect integrand
+    //   [String.raw`x^2`],  // YYYY-MM-DD
+    //   [String.raw`x^2`],  // YYYY-MM-DD
+    // ]
+    // ```
+    // 2. Pass the output to integrand_corrector.html and manually correct any incorrect integrands.
+    // 3. Filter out rows containing constants other than e and pi
+    // 4. Ensure all parentheses are \left( or \right)
+    // 5. Convert to JS object format like in the function:
+    // ```js
+    // {
+    //   "YYYY-MM-DD": [String.raw`x^2`],  // YYYY-MM-DD  // no \int or dx
+    //   "YYYY-MM-DD": [String.raw`x^2`],  // YYYY-MM-DD
+    //   "YYYY-MM-DD": [String.raw`x^2`, instagram image url],  // YYYY-MM-DD  // image url for potentially incorrect integrand
+    //   "YYYY-MM-DD": [String.raw`x^2`],  // YYYY-MM-DD
+    //   "YYYY-MM-DD": [String.raw`x^2`],  // YYYY-MM-DD
+    // }
+    // ```
+    // 6. DONE, just add to the existing INTEGRANDS object.
+    function getTodaysIntegrand() {
+      if (new Date() < new Date('Oct 26 2026')) {
+        const INTEGRANDS = [
+          String.raw`\sqrt{e^{x}}`,
+          String.raw`\left(x+1\right)^2`,
+          String.raw`\frac{x^3}{\sqrt{1+x^2}}`,
+          String.raw`x^3\cdot\sqrt{x^2-1}`,
+          String.raw`\frac{x^2}{\sqrt{1-x^2}}`,
+          String.raw`\frac{\sqrt{1+x}}{\sqrt{1-x^2}}`,
+          String.raw`\frac{x}{x^2+4x+5}`,
+          String.raw`\frac{x^5}{\sqrt{1-x^3}}`,
+          String.raw`\frac{2x}{x^2+8}`,
+          String.raw`\frac{\left(x-1\right)^2}{x+1}`,
+          String.raw`\frac{6x^3-2x}{x^2}`,
+          String.raw`\frac{2}{2x+7}`,
+          String.raw`e^{\arcsin(x)}`,
+          String.raw`\frac{1}{x\cdot\left(1+\ln^2(x)\right)}`,
+          String.raw`\frac{1}{x^2+x}`,
+          String.raw`\ln\left(1-x\right)`,
+          String.raw`\frac{\sqrt{1-x}}{\sqrt{x}}`,
+          String.raw`\frac{x}{4+x^4}`,
+          String.raw`\frac{e^x+1}{e^x+x}`,
+          String.raw`x\cdot\ln^2\left(x\right)`,
+          String.raw`\frac{\cos^3\left(x\right)}{\sqrt{\sin\left(x\right)}}`,
+          String.raw`\frac{1+x^2}{\sqrt{x}}`,
+          String.raw`x\cdot\arcsin\left(x\right)`,
+          String.raw`x\cdot\arccos\left(x\right)`,
+          String.raw`\frac{1}{\left(1+x^2\right)^2}`,
+          String.raw`\frac{\sqrt{1+x^2}}{x^2}`,
+          String.raw`x\cdot\arctan^2\left(x\right)`,
+          String.raw`\frac{x^2}{\sqrt{1-x}}`,
+          String.raw`\frac{e^{4x}}{e^{4x}+5}`,
+          String.raw`\frac{x^3}{1+x^4}`,
+          String.raw`\frac{x^3}{1+x^2}`,
+        ];
+        const INTEGRAND_POS = Math.floor((new Date() - new Date('2/12/2025')) / 1000 / 60 / 60 / 24) % INTEGRANDS.length
+        return INTEGRANDS[INTEGRAND_POS];
+      }
+      const INTEGRANDS = {
+        "2026-10-26": [String.raw`\frac{e^{-\sqrt{x}}}{\sqrt{x}}`], // 2025-10-28
+        "2026-10-27": [String.raw`\frac{1}{x^2-6x+18}`], // 2025-10-29
+        "2026-10-28": [String.raw`e^{-x}\sin\left(x\right)`], // 2025-10-30
+        "2026-10-29": [String.raw`e^{-x}\cos\left(x\right)`], // 2025-10-31
+        "2026-10-30": [String.raw`\frac{1}{x\sqrt{x-1}}`], // 2025-11-01
+        "2026-10-31": [String.raw`\frac{x^3-2x^2+3x+3}{x^4+2x^2+1}`], // 2025-11-03
+        "2026-11-01": [String.raw`\ln\left(\sqrt[3]{x}\right)`], // 2025-11-04
+        "2026-11-02": [String.raw`\frac{\sqrt{x}}{1+x}`], // 2025-11-05
+        "2026-11-03": [String.raw`\frac{1}{x^4+x}`], // 2025-11-06
+        "2026-11-04": [String.raw`\frac{\ln\left(\ln\left(x\right)\right)}{x}`], // 2025-11-08
+        "2026-11-05": [String.raw`\frac{x}{\left(1+x^2\right)^{3/2}}`], // 2025-11-09
+        "2026-11-06": [String.raw`\sqrt[3]{\tan\left(x\right)}`], // 2025-11-10
+        "2026-11-07": [String.raw`\frac{1}{\sqrt{4-x^2}}`], // 2025-11-11
+        "2026-11-08": [String.raw`\frac{x^{15}}{1+x^{32}}`], // 2025-11-12
+        "2026-11-09": [String.raw`\frac{x}{1+\sqrt{x}}`], // 2025-11-13
+        "2026-11-10": [String.raw`\frac{e^x}{1+e^{2x}}`], // 2025-11-14
+        "2026-11-11": [String.raw`\frac{1}{x\sqrt{x^3-1}}`], // 2025-11-15
+        "2026-11-12": [String.raw`x\ln\left(\sqrt{x}\right)`], // 2025-11-16
+        "2026-11-13": [String.raw`\frac{\cos^3\left(x\right)+\cos^5\left(x\right)}{\sin^2\left(x\right)+\sin^4\left(x\right)}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/579071346_1420714003393311_3175975344463510357_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=103&ig_cache_key=Mzc2NzgzMTIyNzI2OTY3NTQ0NQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=0nbEnbx03RoQ7kNvwGxbjnT&_nc_oc=AdpDevzuwxxg1TNAqOVtzwWP0lR5KWxSw4vm0xI9SOzDnOR-Uj5pZBseOvyyrj3rIW4G2nYFht0_38dd8-ZjgFbC&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=OOTGoXPCsHM0eefSZO2U9Q&_nc_ss=7b689&oh=00_AQNxNXp8U19RgBmi0Jk8XFFSXZ_99-iKyeXId8loOTpBjA&oe=6AE5F42A"], // 2025-11-17
+        "2026-11-14": [String.raw`\frac{e^{2x}}{1+e^x}`], // 2025-11-18
+        "2026-11-15": [String.raw`xe^{-x}`], // 2025-11-19
+        "2026-11-16": [String.raw`\frac{x}{\sqrt{1+x^2}}`], // 2025-11-20
+        "2026-11-17": [String.raw`\frac{\cos\left(x\right)}{\sqrt{\sin\left(x\right)}}`], // 2025-11-22
+        "2026-11-18": [String.raw`\frac{1+2x^3}{x^2\sqrt{4-x^2}}`], // 2025-11-24
+        "2026-11-19": [String.raw`\frac{\sin\left(x\right)\cos\left(x\right)}{1+\cos^2\left(2x\right)}`], // 2025-11-25
+        "2026-11-20": [String.raw`\frac{\sin\left(2x\right)}{1+\cos\left(x\right)}`], // 2025-11-26
+        "2026-11-21": [String.raw`\frac{\sin\left(2x\right)}{1+\cos^2\left(x\right)}`], // 2025-11-27
+        "2026-11-22": [String.raw`\frac{\sin\left(2x\right)}{1+\cos^4\left(x\right)}`], // 2025-11-28
+        "2026-11-23": [String.raw`\frac{\ln\left(\tan\left(x/2\right)\right)}{\sin\left(x\right)}`], // 2025-11-29
+        "2026-11-24": [String.raw`\sqrt{x^2-1}`], // 2025-11-30
+        "2026-11-25": [String.raw`\frac{\arctan\left(x\right)}{\left(x-1\right)^3}`], // 2025-12-01
+        "2026-11-26": [String.raw`x\sqrt{4-x^2}`], // 2025-12-02
+        "2026-11-27": [String.raw`\frac{x^2}{\sqrt{1+x^2}}`], // 2025-12-03
+        "2026-11-28": [String.raw`\frac{\sin\left(x\right)}{\sqrt{\cos\left(x\right)}}`], // 2025-12-04
+        "2026-11-29": [String.raw`\frac{\sqrt{x}}{1+x^3}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/577059638_1420693380062040_8369239314777112188_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ig_cache_key=Mzc4MDg3NzIwMTIzNjQ2Njc0NQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=gaWQK7Ca4bYQ7kNvwGzCcZU&_nc_oc=Adq88z4Y0cnuX8TxF2IwQMIJqlRLHP6gNwQFSP-9VIGZ4LIUvYGWpy81yUM0wqawBc-jZVXzEPej1Hqezfz5ZoTw&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=8OIEWTBuiy6tjpt-WpQtiw&_nc_ss=7b689&oh=00_AQOqGZG-qS-t8fkhJ3yWIHeTkPsHBfZx7ugcRgivnBiHiA&oe=6AE6184E"], // 2025-12-05
+        "2026-11-30": [String.raw`\frac{\left(x+1\right)^2}{x}`], // 2025-12-07
+        "2026-12-01": [String.raw`\frac{\sqrt{4-x^2}}{x^2}`], // 2025-12-08
+        "2026-12-02": [String.raw`\frac{x}{\left(x+1\right)^2}`], // 2025-12-09
+        "2026-12-03": [String.raw`\frac{x^2}{\sqrt{1-x}}`], // 2025-12-10
+        "2026-12-04": [String.raw`x^5\sqrt{1-x^3}`], // 2025-12-11
+        "2026-12-05": [String.raw`\frac{\cos\left(x\right)}{\sqrt{1-\sin\left(x\right)}}`], // 2025-12-12
+        "2026-12-06": [String.raw`\frac{x^3}{1+x^8}`], // 2025-12-13
+        "2026-12-07": [String.raw`\frac{x^3\ln\left(x^2+1\right)}{\left(x^2+1\right)^2}`], // 2025-12-15
+        "2026-12-08": [String.raw`\sin\left(5x\right)\sin\left(3x\right)`], // 2025-12-16
+        "2026-12-09": [String.raw`\frac{1}{e^{-x}-1}`], // 2025-12-17
+        "2026-12-10": [String.raw`\csc^6\left(x\right)`], // 2025-12-18
+        "2026-12-11": [String.raw`x^5\sin\left(x^3\right)`], // 2025-12-19
+        "2026-12-12": [String.raw`\frac{1}{1-\sqrt{x}}`], // 2025-12-20
+        "2026-12-13": [String.raw`\frac{e^{\tan\left(x\right)}}{\cos^2\left(x\right)}`], // 2025-12-21
+        "2026-12-14": [String.raw`\frac{1}{x^2}\cos\left(1/x\right)`], // 2025-12-22
+        "2026-12-15": [String.raw`x\sqrt{1-x^2}`], // 2025-12-23
+        "2026-12-16": [String.raw`\left(1-x^2\right)^{3/2}`], // 2025-12-24
+        "2026-12-17": [String.raw`3^x`], // 2025-12-26
+        "2026-12-18": [String.raw`e^{x/3}`], // 2025-12-28
+        "2026-12-19": [String.raw`\frac{x^4}{\left(1+x^6\right)^2}`], // 2025-12-29
+        "2026-12-20": [String.raw`\frac{x^4}{1+x^{10}}`], // 2025-12-30
+        "2026-12-21": [String.raw`\frac{x^2+x+\sqrt{x+1}}{x+1}`], // 2025-12-31
+        "2026-12-22": [String.raw`\frac{\sqrt{x+1}}{x}`], // 2026-01-01
+        "2026-12-23": [String.raw`\frac{\sin\left(x\right)}{1-\sin\left(x\right)}`], // 2026-01-02
+        "2026-12-24": [String.raw`\frac{e^{3x}}{1+e^{2x}}`], // 2026-01-03
+        "2026-12-25": [String.raw`x^3\ln\left(x^3+1\right)`], // 2026-01-05
+        "2026-12-26": [String.raw`\frac{x+1}{x-1}`], // 2026-01-06
+        "2026-12-27": [String.raw`\frac{e^x-1}{e^x+1}`], // 2026-01-07
+        "2026-12-28": [String.raw`\frac{1}{x^2-2x+2}`], // 2026-01-08
+        "2026-12-29": [String.raw`\frac{x+1}{x^2+2x+2}`], // 2026-01-09
+        "2026-12-30": [String.raw`x^2\sqrt{1-x^2}`], // 2026-01-10
+        "2026-12-31": [String.raw`\frac{1}{\sin\left(2x\right)}`], // 2026-01-11
+        "2027-01-01": [String.raw`\frac{\sqrt{\cos\left(x\right)}}{\sin\left(x\right)}`], // 2026-01-12
+        "2027-01-02": [String.raw`\frac{\sin\left(x\right)}{\sqrt{1-\cos\left(x\right)}}`], // 2026-01-13
+        "2027-01-03": [String.raw`x\left(1-x^2\right)^{3/2}`], // 2026-01-14
+        "2027-01-04": [String.raw`\frac{x^2+x-1}{x^2-1}`], // 2026-01-15
+        "2027-01-05": [String.raw`\frac{1}{\sqrt{e^x}}`], // 2026-01-16
+        "2027-01-06": [String.raw`\frac{1}{\sqrt{e^x+1}}`], // 2026-01-17
+        "2027-01-07": [String.raw`\frac{1}{\tan\left(x\right)}`], // 2026-01-18
+        "2027-01-08": [String.raw`\frac{\arctan^2\left(x\right)}{x^2+1}`], // 2026-01-19
+        "2027-01-09": [String.raw`\frac{1}{\sqrt{x-1}}`], // 2026-01-20
+        "2027-01-10": [String.raw`\frac{1+\sqrt{x}}{1-\sqrt{x}}`], // 2026-01-21
+        "2027-01-11": [String.raw`x\left(1+x^2\right)^{3/2}`], // 2026-01-22
+        "2027-01-12": [String.raw`x^5\cos\left(x^3\right)`], // 2026-01-23
+        "2027-01-13": [String.raw`\frac{1}{\cos^6\left(x\right)}`], // 2026-01-24
+        "2027-01-14": [String.raw`\frac{1+e^x}{1-e^x}`], // 2026-01-25
+        "2027-01-15": [String.raw`\frac{\ln\left(x+1\right)}{x}+\frac{\ln\left(x\right)}{x+1}`], // 2026-01-26
+        "2027-01-16": [String.raw`\frac{1}{x^2-2x+10}`], // 2026-01-27
+        "2027-01-17": [String.raw`e^{x/2}`], // 2026-01-28
+        "2027-01-18": [String.raw`\frac{\sin\left(\tan\left(x\right)\right)}{\cos^2\left(x\right)}`], // 2026-01-30
+        "2027-01-19": [String.raw`\frac{\cos^2\left(x\right)}{1-\sin\left(x\right)}`], // 2026-01-31
+        "2027-01-20": [String.raw`x\ln\left(x^2+1\right)`], // 2026-02-01
+        "2027-01-21": [String.raw`\frac{x^5-x^4+2x^3-x^2+x-1}{x^5+x^4+2x^3+2x^2+x+1}`], // 2026-02-02
+        "2027-01-22": [String.raw`\frac{1}{x\ln^{5}\left(x\right)}`], // 2026-02-03
+        "2027-01-23": [String.raw`\sin\left(2\arcsin\left(x\right)\right)`], // 2026-02-04
+        "2027-01-24": [String.raw`\frac{e^x}{e^x-e^{-x}}`], // 2026-02-05
+        "2027-01-25": [String.raw`\sqrt{x}`], // 2026-02-06
+        "2027-01-26": [String.raw`\frac{1}{2x^2-2x+1}`], // 2026-02-07
+        "2027-01-27": [String.raw`\frac{\ln\left(x\right)+2}{x\left(\ln\left(x\right)+1\right)\left(\ln\left(x\right)+3\right)}`], // 2026-02-09
+        "2027-01-28": [String.raw`\frac{x^3-1}{x^2}`], // 2026-02-10
+        "2027-01-29": [String.raw`\frac{x^2}{\sqrt{x^3-1}}`], // 2026-02-11
+        "2027-01-30": [String.raw`\tan\left(x\right)\ln\left(\cos\left(x\right)\right)`], // 2026-02-12
+        "2027-01-31": [String.raw`\frac{1}{e^{-x}+1}`], // 2026-02-13
+        "2027-02-01": [String.raw`\frac{x^5}{x^3+1}`], // 2026-02-14
+        "2027-02-02": [String.raw`\frac{2\sqrt{x}-1}{2x\sqrt{x}-2x}`], // 2026-02-16
+        "2027-02-03": [String.raw`\frac{x}{\left(x+1\right)^{3/2}}`], // 2026-02-17
+        "2027-02-04": [String.raw`2x\sqrt{x^2+1}`], // 2026-02-18
+        "2027-02-05": [String.raw`\frac{\cos\left(\tan\left(x\right)\right)}{\cos^2\left(x\right)}`], // 2026-02-19
+        "2027-02-06": [String.raw`\frac{1}{x^2-2x+3}`], // 2026-02-20
+        "2027-02-07": [String.raw`\frac{e^{1/x^2}}{x^3}`], // 2026-02-21
+        "2027-02-08": [String.raw`\frac{e^{-x}}{1+e^{-x}}`], // 2026-02-24
+        "2027-02-09": [String.raw`\arctan\left(2x\right)`], // 2026-02-25
+        "2027-02-10": [String.raw`x^3\sin\left(x^2\right)`], // 2026-02-26
+        "2027-02-11": [String.raw`\frac{\ln\left(x+1\right)-\ln\left(x\right)}{x\left(x+1\right)}`], // 2026-02-27
+        "2027-02-12": [String.raw`\cos^2\left(2x\right)`], // 2026-02-28
+        "2027-02-13": [String.raw`\frac{x^2+1}{x^4+1}`], // 2026-03-01
+        "2027-02-14": [String.raw`\frac{\sqrt{\sin\left(x\right)\cos\left(x\right)}}{\sin\left(x\right)+\cos\left(x\right)}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/629267452_1498814608916583_5954066580931391351_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=108&ig_cache_key=Mzg0MzkzMjY4MzAyMjIzNzc5MQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=mg7U-J39LnEQ7kNvwFFXIgd&_nc_oc=Ado9nwpdQiLJ-6Uk1mGn2wHGCmXJeF_95GZp9IEx_a6XQQ31Jypxy11IBe4Ppm3OlbfVYve6lj2S04k20naE2gHk&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=BVUfnmCtEFo9QfCFcDbirw&_nc_ss=7b689&oh=00_AQMlYdujvPs6TxZ77J60XLu-HkrjQpjL-BUsKNLO9nSQJA&oe=6AE626A4"], // 2026-03-02
+        "2027-02-15": [String.raw`e^{3x}`], // 2026-03-03
+        "2027-02-16": [String.raw`xe^{-x}`], // 2026-03-05
+        "2027-02-17": [String.raw`\sin^3\left(x\right)\cos^4\left(x\right)`], // 2026-03-06
+        "2027-02-18": [String.raw`\frac{1}{x^2-x+1}`], // 2026-03-07
+        "2027-02-19": [String.raw`\frac{\sin\left(x\right)\cos\left(x\right)}{\sin^4\left(x\right)+\cos^4\left(x\right)}`], // 2026-03-08
+        "2027-02-20": [String.raw`x\arctan\left(x\right)\ln\left(x^2+1\right)`], // 2026-03-09
+        "2027-02-21": [String.raw`\frac{\cos\left(x\right)}{\sqrt{1+\sin\left(x\right)}}`], // 2026-03-10
+        "2027-02-22": [String.raw`\frac{1}{\sqrt{4x-x^2}}`], // 2026-03-11
+        "2027-02-23": [String.raw`\frac{\sin^2\left(x\right)}{\left(1+\cos\left(x\right)\right)^2}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/649091223_1524755782989132_1043624218033196242_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ig_cache_key=Mzg1MTE4MDQ1NjIwNTUwODUzNg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=dIl3IqwIewsQ7kNvwGiGPAz&_nc_oc=AdoznNYO2XKN1elXQPmkjrPSUGd8LFkqpTyNIEAEqv5alc5AYrKzfGGSO4Y9JCQsoieEXCB7gSN6VJ4zq8JOfzHx&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=lUEECK8HvrWds1Z84ee46Q&_nc_ss=7b689&oh=00_AQPu3qnKF3FNEdaVfiMWO4BArvd2nBTWe77LXiuf1XkVEQ&oe=6AE61E56"], // 2026-03-12
+        "2027-02-24": [String.raw`\sqrt{\tan\left(x\right)}+\sqrt{\cot\left(x\right)}`], // 2026-03-14
+        "2027-02-25": [String.raw`e^{-x}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/650559346_1524764129654964_174973857477342742_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ig_cache_key=Mzg1MzM1NDc1NDc0NDQyMjAxOQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=4Sn9UY2Pg-0Q7kNvwFNbREd&_nc_oc=AdpvdMwIG7vCD6GFiyKoXNHztmuymY8lIupEJ78jhb3CGI1FD0fFqZBvPRq6rxwCkKp3uP6sXSbRx7gvFL2O3-Uw&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=3-28ifZ6-e4AIl2cwA7xrw&_nc_ss=7b689&oh=00_AQMBXRnWCE53Bhapo1lxP6h1ouBD3QCBVNhYr3OawvbPyw&oe=6AE61CCB"], // 2026-03-15
+        "2027-02-26": [String.raw`\left(\frac{3}{2}\right)^x+\frac{\pi\sec^2\left(x\right)}{4}-\frac{e}{x^2+5}`], // 2026-03-16
+        "2027-02-27": [String.raw`\frac{\left(1-2x\right)e^{\arctan\left(x\right)}}{\left(1+x^2\right)^2}`], // 2026-03-17
+        "2027-02-28": [String.raw`\frac{\sin\left(x\right)}{\left(1+\cos\left(x\right)\right)^2}`], // 2026-03-18
+        "2027-03-01": [String.raw`\frac{x^3}{\sqrt{x^2+4}}`], // 2026-03-19
+        "2027-03-02": [String.raw`\sin^3\left(2x\right)`], // 2026-03-21
+        "2027-03-03": [String.raw`x^3\cos\left(x^2\right)`], // 2026-03-22
+        "2027-03-04": [String.raw`\frac{4x^2-16x+12}{\left(x-2\right)^2\left(x^2-2x+2\right)^2}`], // 2026-03-23
+        "2027-03-05": [String.raw`\frac{1}{16+x^2}`], // 2026-03-25
+        "2027-03-06": [String.raw`\frac{1}{x^{1/2}+x^{1/3}}`], // 2026-03-26
+        "2027-03-07": [String.raw`\frac{\sqrt{x}}{\sqrt{1-x^3}}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/648620459_1524936596304384_3356119489804744050_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=Mzg2MjA1MjA5NzIyMzQ3OTAxOQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=x32B1ShmbSkQ7kNvwGfSP2u&_nc_oc=AdodkZCW0BHTt1Rk8Xp2JnqPFr8EfyfZzUHLGnt7mI9VAdSkmO21RJEAG52-hh4KrBPwphKLu7cDgdNyP0s39F89&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=nLnr3XfvtHr6_9uXvI42Dg&_nc_ss=7b689&oh=00_AQPNzsCcbRfvIsSfmdT9e3bUIp9buplRI1CkIjSShc1pTQ&oe=6AE628F4"], // 2026-03-27
+        "2027-03-08": [String.raw`\frac{xe^x}{\left(1+x\right)^2}`], // 2026-03-28
+        "2027-03-09": [String.raw`\frac{1}{x^2\sqrt{1-x^2}}`], // 2026-03-29
+        "2027-03-10": [String.raw`\frac{1}{x^6+1}`], // 2026-03-30
+        "2027-03-11": [String.raw`\frac{\tan\left(\ln\left(x\right)\right)}{x}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/649063487_1524939749637402_2059051673005747596_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=103&ig_cache_key=Mzg2NDkyMTAxMjY2Nzg0MzYxOQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=gYeUOA9Qc1cQ7kNvwFsrvJE&_nc_oc=AdqOk1ktVuco5U7cgKWtnt-pajgedOFJBoslS2q8YLpu2n5m3hYhGz8P1d2OhWjoDwkzWwbzXW6qU1-j6AqK46Fd&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=2MrP-i07l5WTHo-dFC2FBQ&_nc_ss=7b689&oh=00_AQOuRpLWxB-hZimLxzjbWJwgBxKR1jftnuETZ7wKjzU_9A&oe=6AE61C66"], // 2026-03-31
+        "2027-03-12": [String.raw`e^{2x}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/649490919_1524943819636995_2732411171843823718_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ig_cache_key=Mzg2NTY0NTc4ODY1OTYxNDE3Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=ULE7sSYXQKcQ7kNvwHcU0eY&_nc_oc=Adr2-v_Y1_TipSyifgt22Q4c7nEjb3Pgy8nGLxElj4Y3sUsHi1ONj8N0tg1q9_yf19_rf-ACl_jgTGKhv7PZXFOE&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=SnzIonS_alOaCoDmYIafyA&_nc_ss=7b689&oh=00_AQMxyKgHzlil1hVBv7KbVQOGdHmq5ZdO5r-d5gwNZ4O2pQ&oe=6AE5FEAC"], // 2026-04-01
+        "2027-03-13": [String.raw`\frac{\arcsin\left(x\right)}{\sqrt{1+x}}`], // 2026-04-02
+        "2027-03-14": [String.raw`\frac{\sqrt{x^2-1}}{x}`], // 2026-04-03
+        "2027-03-15": [String.raw`\cos^3\left(x\right)\sin^4\left(x\right)`], // 2026-04-05
+        "2027-03-16": [String.raw`\frac{e^x}{\left(1+\sinh\left(x\right)\right)\left(2+\tanh\left(x\right)\right)}`], // 2026-04-06
+        "2027-03-17": [String.raw`\sqrt{9-x^2}`], // 2026-04-07
+        "2027-03-18": [String.raw``, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/668199071_1550597213738322_9078605021852856071_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=100&ig_cache_key=Mzg3MDg0OTQ2NTE4ODIyMjg0Nw%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=RXXnYFDb-MEQ7kNvwHS-R_s&_nc_oc=Adoxjv_s3QznZQsRytOWdYRzltZcx3LgI1SQCdV7wZG6Z04KGS2wozdr0wt1SUwl3ofc64lxUo5TEKPxhIv4feSD&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=FE5tiG5obnbBOu1fQFEHeA&_nc_ss=7b689&oh=00_AQO4YtEYGiVR2QoSqb4QeJLC9VkT4gKjIqQbYtCwNNQlkg&oe=6AE600F5"], // 2026-04-08
+        "2027-03-19": [String.raw`x^{-1/2}`], // 2026-04-08
+        "2027-03-20": [String.raw`\frac{1}{x\ln^3\left(x\right)}`], // 2026-04-09
+        "2027-03-21": [String.raw`\frac{\cos\left(x\right)}{\sin^4\left(x\right)}`], // 2026-04-11
+        "2027-03-22": [String.raw`\left(2x^2+1\right)e^{x^2}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/667019165_1551560273642016_2127111492068523077_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=110&ig_cache_key=Mzg3MzYxODI3OTgyNzUwMjY1Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=tElmbZY6FXwQ7kNvwFIqh8X&_nc_oc=Adr6xdRD7tLy44SK3j8-MmQCWwV-xzE0NHOuNzq0DQttGD1lIa0jmxB47WFoORb13DgofJQZr-JJOb-pT1H3yVGi&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=0N96YX6Xx3uQd2n8QLOPEw&_nc_ss=7b689&oh=00_AQNIRXgsiI9KBGPvYCd1X9oSFcie9gOFAuBnRJwDza_VHw&oe=6AE603E3"], // 2026-04-12
+        "2027-03-23": [String.raw`\frac{1}{\left(x^3+1\right)\sqrt{x^2+1}}`], // 2026-04-13
+        "2027-03-24": [String.raw`x^3\sqrt{1-x^2}`], // 2026-04-15
+        "2027-03-25": [String.raw`\ln\left(\sqrt{1+x^2}\right)`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/672066380_1555535283244515_6643623862154979667_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=103&ig_cache_key=Mzg3NjUxNzM3OTUwNTU5MTYzMg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=wgCRENQsdGIQ7kNvwFlfu-n&_nc_oc=AdpMbWN2JNjuTm8dh9rjLMf8j0j4_26IvXMTFdgzazp3Q2mL5CTqEp6gzJnIAXWFnBqZKYlRb6l96C6R_hS1eUYC&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=lScQYyZND_60d06FENX3rg&_nc_ss=7b689&oh=00_AQPyzIr6gUPniDiKjAWeNTz_KtMk_sGqg5Y1TESaZyqJJw&oe=6AE61C47"], // 2026-04-16
+        "2027-03-26": [String.raw`\frac{\sin\left(x\right)+\cos\left(x\right)}{\sqrt{\sin\left(2x\right)}}`], // 2026-04-18
+        "2027-03-27": [String.raw`x\ln\left(x+1\right)`], // 2026-04-19
+        "2027-03-28": [String.raw`\frac{\left(-2\right)^{\ln\left(e\right)}\cot\left(x\right)\left(\csc^{-4}\left(x\right)-1\right)^{-\frac{1}{2}}}{\csc^2\left(x\right)\left(\left(\sec^{-2}\left(x\right)-1\right)\left(1^{x\ln\left(e\right)}+1^{\ln\left(x\right)}\right)\right)^{\ln\left(e\right)}}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/678437551_1560964559368254_3887984415581132957_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=104&ig_cache_key=Mzg3OTQxNjQ4MTk0MzQ1OTMyOQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=dqsURDPQND8Q7kNvwE3Ynht&_nc_oc=AdrxA4oQ1voevdtRVGsr9QhJ1X7e0t3w2iPzd0I0m7FHITlOks1QafX4KlHLA7BTTFqEseLv691kEcAUlRoduHJ_&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=Xpwg5QRJCT9AtLwduK3vDg&_nc_ss=7b289&oh=00_AQM4agXOPQGfskaIwlwXDtvGXjj0wJR09_XLrSpTCrub9Q&oe=6AE6143A"], // 2026-04-20
+        "2027-03-29": [String.raw`\frac{1}{e^x+1}`], // 2026-04-21
+        "2027-03-30": [String.raw`\ln\left(x\right)`], // 2026-04-22
+        "2027-03-31": [String.raw`\ln\left(x+\sqrt{1+x^2}\right)`], // 2026-04-23
+        "2027-04-01": [String.raw`\frac{1}{x^2+x+1}`], // 2026-04-24
+        "2027-04-02": [String.raw`\frac{\sqrt{1-x^2}}{x^2}`], // 2026-04-25
+        "2027-04-03": [String.raw`e^x\sin\left(e^x\right)`], // 2026-04-26
+        "2027-04-04": [String.raw`\frac{\pi\ln\left(\sec\left(x\right)+\tan\left(x\right)\right)}{\cos\left(x\right)}`], // 2026-04-27
+        "2027-04-05": [String.raw`e^x\sin\left(x\right)`], // 2026-04-28
+        "2027-04-06": [String.raw`e^x\cos\left(x\right)`], // 2026-04-29
+        "2027-04-07": [String.raw`\frac{\ln\left(\ln\left(x\right)\right)}{x\ln\left(x\right)}`], // 2026-04-30
+        "2027-04-08": [String.raw`x\sin\left(x\right)`], // 2026-05-01
+        "2027-04-09": [String.raw`\sin^2\left(x\right)`], // 2026-05-02
+        "2027-04-10": [String.raw`\cos^2\left(x\right)`], // 2026-05-03
+        "2027-04-11": [String.raw`\frac{4x+7}{\left(x^2+2x+3\right)^2}`], // 2026-05-04
+        "2027-04-12": [String.raw`\arccos\left(x\right)`], // 2026-05-05
+        "2027-04-13": [String.raw`\arcsin\left(x\right)`], // 2026-05-06
+        "2027-04-14": [String.raw`\arctan\left(x\right)`], // 2026-05-07
+        "2027-04-15": [String.raw`x\arctan\left(x\right)`], // 2026-05-08
+        "2027-04-16": [String.raw`x^2\arctan\left(x\right)`], // 2026-05-09
+        "2027-04-17": [String.raw`\frac{x}{e^x}`], // 2026-05-10
+        "2027-04-18": [String.raw`\frac{1}{x^5-x^3-x^2+1}`], // 2026-05-11
+        "2027-04-19": [String.raw`xe^{x^2}`], // 2026-05-12
+        "2027-04-20": [String.raw`\frac{\cos^3\left(x\right)}{\sin^4\left(x\right)}`], // 2026-05-13
+        "2027-04-21": [String.raw`x^2e^x`], // 2026-05-14
+        "2027-04-22": [String.raw`\frac{1+x}{1+\sqrt{x}}`], // 2026-05-15
+        "2027-04-23": [String.raw`\frac{e^{-x}}{1+e^x}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/683690639_1570874408377269_3043730970659902231_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ig_cache_key=Mzg5ODI2MDY2NjEzMDIyMDE5NA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=dzq8ehMcfecQ7kNvwFHqD3b&_nc_oc=AdocHGSw8LjjSiDX5iUEOxdlq2X2ikoq-OW3kJFll0mzz6MGGCSwbxAS4jKKa3AQobVP-gCojqMF0WNGcgD8BVfT&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=KA9fV_8A9wPSTECiRrfxXw&_nc_ss=7b689&oh=00_AQNYE1ppDM5rQZOQoN-lVdOR8ij5Roas1FcIJGjpLDWZMQ&oe=6AE601A3"], // 2026-05-16
+        "2027-04-24": [String.raw`\frac{1}{\sqrt{x}}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/684221632_1570874908377219_7968652772014244122_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=Mzg5ODk4NTQzMjQ0OTg4MjMzMg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=a74VopfK74sQ7kNvwHNPk10&_nc_oc=Adp-sRasDB3Dkuc3PHWcqGoebxrOllq1i2MMr0lr5o2leqVDCdHsXb6KFDb5L7zksWHmdkaYFrJ976FmBF7KjomD&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=VikA2G9RF-K0Y81hAg8bxg&_nc_ss=7b689&oh=00_AQPbKK0_bi9gPDbwBNvqCj97y-RYl3Tp-dXmjmxruwt7KA&oe=6AE62A93"], // 2026-05-17
+        "2027-04-25": [String.raw`\frac{x^2+3x+4}{x^3+8}`], // 2026-05-18
+        "2027-04-26": [String.raw`\frac{1}{x^2-3x+2}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/686991457_1570875378377172_7664120505403123412_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ig_cache_key=MzkwMDQzNDk4OTMwNTMwOTUzNg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=RQ7u-Ltdj8wQ7kNvwHbrvP0&_nc_oc=AdoPfwFzxYVoZ0_xpjCJVHOUmUXuAxwme5ciZq_QfBKUXdSKQN9XOH1RSZK2n3iB-F8I0SlbE5eT9c5DQDCY4bL_&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=IWo4hNwL6pt9XKttA_vB4w&_nc_ss=7b689&oh=00_AQNUlHMfT1z-SXbb-iam_SbIjcnnMdPtrX-VZ5AAJy58vA&oe=6AE61036"], // 2026-05-19
+        "2027-04-27": [String.raw`\frac{1}{9+4x^2}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/686120049_1570876051710438_60515176025283432_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=107&ig_cache_key=MzkwMTE1OTc0ODg1NDg3NzYyMQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=jMHs2x7bqIsQ7kNvwHtgRUQ&_nc_oc=Adp5IAp7DzCm-S48e7KsDIgr5iGhyTYPg9zlMCFnM8enRrzR_IPN301G1pQ9wi7LHDGg743t0Bqy5Lobd1W3hMVN&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=FQsjCGmGqs8WjMMJrwvVOQ&_nc_ss=7b689&oh=00_AQPIvIr0KGqZvunqaDhQElhmH_2HhyzHwbrTk1sGJZMGPg&oe=6AE5F519"], // 2026-05-20
+        "2027-04-28": [String.raw`\sqrt{\frac{1-x}{1+x}}`], // 2026-05-21
+        "2027-04-29": [String.raw`\tan\left(x\right)`], // 2026-05-22
+        "2027-04-30": [String.raw`\frac{x}{x+1}`], // 2026-05-23
+        "2027-05-01": [String.raw`\frac{x+1}{x}`], // 2026-05-24
+        "2027-05-02": [String.raw`x^x \ln\left(ex\right)`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/679835547_1567056965425680_675738403362614529_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=108&ig_cache_key=MzkwNDc4MzYzNzI4MzgxMDAzMQ%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=dn3zc0VtdEIQ7kNvwEI6zvJ&_nc_oc=AdrthYOKkRze18pbFkFjUJgAQd8d77qO-Uo34FVPEIEXdX0EO5CgykLs4A3FIp5QUhrpDA833c12fod80Jp2TsiA&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=WCrTYcjrJ3EIMgnfdNjBdQ&_nc_ss=7b689&oh=00_AQNNgenOB0MxStgARK9o0pq3vZEtWUAUWxRDyzsVHjUcsw&oe=6AE61F36"], // 2026-05-25
+        "2027-05-03": [String.raw`\frac{1}{x^2}`], // 2026-05-26
+        "2027-05-04": [String.raw`x^2\ln\left(x\right)`], // 2026-05-27
+        "2027-05-05": [String.raw`\frac{1}{\left(1-x\right)^2}`], // 2026-05-28
+        "2027-05-06": [String.raw`\frac{1}{x\ln^2\left(x\right)}`], // 2026-05-29
+        "2027-05-07": [String.raw`x^{-\frac{2}{3}}`], // 2026-05-31
+        "2027-05-08": [String.raw`\frac{\ln\left(x\right)\sin\left(\arcsin\left(x\right)\right)}{\sqrt{1-x^2}}`], // 2026-06-01
+        "2027-05-09": [String.raw`\frac{\sin\left(x\right)}{\cos^5\left(x\right)}`], // 2026-06-02
+        "2027-05-10": [String.raw`\frac{1}{\left(1-x\right)^2}`], // 2026-06-03
+        "2027-05-11": [String.raw`\frac{1}{4+x^2}`], // 2026-06-04
+        "2027-05-12": [String.raw`\cos\left(x\right)e^{\sin\left(x\right)}`], // 2026-06-05
+        "2027-05-13": [String.raw`\frac{1}{x-x\ln\left(x\right)}`], // 2026-06-06
+        "2027-05-14": [String.raw`\frac{x^2}{x-5}`], // 2026-06-07
+        "2027-05-15": [String.raw`\sin\left(\ln\left(e^{\arcsin\left(\frac{x}{\sqrt{1-x^2}}\right)}\right)\right)e^{\sqrt{1-x^2}}\sin\left(\sqrt{1-x^2}\right)`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/700761929_1587454456719264_7271168841001827063_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=MzkxNDkzMDQ5OTgzNDkwODQzMw%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=y7vg51PqFikQ7kNvwGuGt69&_nc_oc=AdoYSqd6DcZWE-AvV1_lWcimUugQyPUZ2o4-SHbapXNpX1cSPYK02EMYLKx5SKNOWRFyGECJ4yYZcyRy3dweIMjD&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=5m-kYkolkFRRIYSJQ8uU5w&_nc_ss=7b689&oh=00_AQO_uGAU-eP0Yj9UH-7QnsmDZ-vbcYDqaQ0use7kQhRnZA&oe=6AE5F406"], // 2026-06-08
+        "2027-05-16": [String.raw`\frac{\sqrt{\ln\left(x\right)}}{x}`], // 2026-06-09
+        "2027-05-17": [String.raw`\sqrt{1-x^2}`], // 2026-06-10
+        "2027-05-18": [String.raw`\sin^3\left(x\right)`], // 2026-06-11
+        "2027-05-19": [String.raw`\cos^3\left(x\right)`], // 2026-06-12
+        "2027-05-20": [String.raw`xe^x`], // 2026-06-14
+        "2027-05-21": [String.raw`\frac{2\sqrt{x}-1}{2x\sqrt{x}-2x}`], // 2026-06-15
+        "2027-05-22": [String.raw`\frac{x+1}{\sqrt{x-1}}`], // 2026-06-16
+        "2027-05-23": [String.raw`\ln\left(1-x^2\right)`], // 2026-06-17
+        "2027-05-24": [String.raw`x\cos\left(x\right)`], // 2026-06-18
+        "2027-05-25": [String.raw`\frac{1}{x^2+2x+1}`], // 2026-06-20
+        "2027-05-26": [String.raw`\frac{1}{x^2+2x+2}`], // 2026-06-21
+        "2027-05-27": [String.raw`\frac{x^3+x^2+1}{x^6-1}`], // 2026-06-22
+        "2027-05-28": [String.raw`\frac{\ln\left(1+x^2\right)}{x^2}`], // 2026-06-23
+        "2027-05-29": [String.raw`\ln^2\left(x\right)`], // 2026-06-24
+        "2027-05-30": [String.raw`x^2\sin\left(x\right)`], // 2026-06-25
+        "2027-05-31": [String.raw`x^2\cos\left(x\right)`], // 2026-06-26
+        "2027-06-01": [String.raw`\sqrt{x}`], // 2026-06-28
+        "2027-06-02": [String.raw`\tan\left(x\right)\sqrt{2+\sqrt{4+\cos\left(x\right)}}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/723883584_1616777970453579_4619398791154242451_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=100&ig_cache_key=MzkzMDE1MDc5MzM1MzM3MTc2Mg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=e2WjTfA-UrcQ7kNvwHyERQq&_nc_oc=Adps4b_ttIpEI6hY9HD-EZsaLvMkqUdwQ0_Y9DHePCCvWnmtfe1kSA9ubl5uTI-FgNUMObClY3zb1wvmqoIyfrKq&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=8j7qz7mbfkV5jJ_5gyUVzw&_nc_ss=7b689&oh=00_AQOw725Z0gezbUDUOYLSrCe0fluds3y3XdPeSihaesN-6g&oe=6AE622BB"], // 2026-06-29
+        "2027-06-03": [String.raw`\frac{1}{\left(x+1\right)^2}`], // 2026-06-30
+        "2027-06-04": [String.raw`\frac{x^3}{\sqrt{1-x^2}}`], // 2026-07-01
+        "2027-06-05": [String.raw`\frac{1}{1-x^2}`], // 2026-07-02
+        "2027-06-06": [String.raw`x^{-\frac{3}{2}}`], // 2026-07-03
+        "2027-06-07": [String.raw`\sin\left(\ln\left(x\right)\right)`], // 2026-07-04
+        "2027-06-08": [String.raw`\cos\left(\ln\left(x\right)\right)`], // 2026-07-05
+        "2027-06-09": [String.raw`\frac{x+3}{\left(x^2-9\right)\sqrt{x^2+2x+2}}`], // 2026-07-06
+        "2027-06-10": [String.raw`\frac{\sin\left(x\right)}{\cos\left(x\right)}`], // 2026-07-07
+        "2027-06-11": [String.raw`\frac{\cos\left(x\right)}{\sin\left(x\right)}`], // 2026-07-08
+        "2027-06-12": [String.raw`\frac{\arctan\left(x\right)}{1+x^2}`], // 2026-07-09
+        "2027-06-13": [String.raw`\frac{e^x}{e^x+1}`], // 2026-07-10
+        "2027-06-14": [String.raw`\frac{1}{x^2-4}`], // 2026-07-11
+        "2027-06-15": [String.raw`\sqrt{x}\ln\left(x\right)`], // 2026-07-12
+        "2027-06-16": [String.raw`\frac{x^2-1}{x^4+3x^2+1}\arctan\left(\frac{x^2+1}{x}\right)`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/719876321_1616781860453190_1258229991107862857_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=105&ig_cache_key=Mzk0MDI5NzY1MjAzODQyMjk0NA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=ti8vkMKao-MQ7kNvwGiq2sY&_nc_oc=AdqV2TfIk8JgDw8U98q1f2m7p08ksgGCrBMLx-frVX4DIemmkNwLh4IYQyD-13WGi9yBTqt3dMlFSSPiM9qIX8ZG&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=oP299bQejMEN2ho5ODbNBQ&_nc_ss=7b689&oh=00_AQOZojyTGbf_F2Wh1LhvvDho-NqlQGzu1U2-LAKUSfgy8A&oe=6AE5F366"], // 2026-07-13
+        "2027-06-17": [String.raw`\frac{x-1}{\sqrt{x}}`], // 2026-07-14
+        "2027-06-18": [String.raw`\frac{x}{\sqrt{1-x^2}}`], // 2026-07-15
+        "2027-06-19": [String.raw`\ln\left(\sqrt{x}\right)`], // 2026-07-16
+        "2027-06-20": [String.raw`\frac{x^3}{x^8+5}`], // 2026-07-17
+        "2027-06-21": [String.raw`e^{\sqrt{x}}`], // 2026-07-18
+        "2027-06-22": [String.raw`\tan^5\left(x\right)`], // 2026-07-19
+        "2027-06-23": [String.raw`\frac{x\arcsec\left(x\right)}{\left(x^2-1\right)^4}`], // 2026-07-20
+        "2027-06-24": [String.raw`e^x\sin\left(x\right)\cos\left(x\right)`], // 2026-07-21
+        "2027-06-25": [String.raw`\frac{x+2}{x^2+2x+5}`], // 2026-07-22
+        "2027-06-26": [String.raw`\frac{\sin\left(x\right)-\cos\left(x\right)}{\sin\left(x\right)+\cos\left(x\right)}`], // 2026-07-23
+        "2027-06-27": [String.raw`\ln\left(1+x^2\right)`], // 2026-07-24
+        "2027-06-28": [String.raw`\frac{e^{1/x^3}}{x^4}`], // 2026-07-25
+        "2027-06-29": [String.raw`\frac{1}{x^4-1}`], // 2026-07-26
+        "2027-06-30": [String.raw`x^2\arctan\left(x\right)\ln\left(x^2+1\right)`], // 2026-07-27
+        "2027-07-01": [String.raw`\frac{1}{\sin\left(x\right)\cos\left(x\right)}`], // 2026-07-28
+        "2027-07-02": [String.raw`\frac{\cos\left(\ln\left(x\right)\right)}{x}`], // 2026-07-29
+        "2027-07-03": [String.raw`\frac{\sin\left(\ln\left(x\right)\right)}{x}`], // 2026-07-30
+        "2027-07-04": [String.raw`\frac{x^2}{\sqrt{1-x^2}}`], // 2026-07-31
+        "2027-07-05": [String.raw`\frac{\sin\left(x\right)}{\sqrt{1+\cos\left(x\right)}}`], // 2026-08-01
+        "2027-07-06": [String.raw`\arctan\left(x\right)+\arctan\left(\frac{1}{x}\right)`], // 2026-08-03
+        "2027-07-07": [String.raw`\sin\left(x\right)\cos\left(x\right)`], // 2026-08-04
+        "2027-07-08": [String.raw`\sin\left(x\right)\cos^{2}\left(x\right)`], // 2026-08-05
+        "2027-07-09": [String.raw`\sin^{2}\left(x\right)\cos\left(x\right)`], // 2026-08-06
+        "2027-07-10": [String.raw`\sin^{2}\left(x\right)\cos^{2}\left(x\right)`], // 2026-08-07
+        "2027-07-11": [String.raw`\sin^{2}\left(x\right)\cos^{3}\left(x\right)`], // 2026-08-08
+        "2027-07-12": [String.raw`\sin^{3}\left(x\right)\cos^{3}\left(x\right)`], // 2026-08-09
+        "2027-07-13": [String.raw`\frac{25x^{4}-4x^{2}}{\sqrt{25x^{2}-4}}`], // 2026-08-10
+        "2027-07-14": [String.raw`x\arcsin\left(x^{2}\right)`], // 2026-08-11
+        "2027-07-15": [String.raw`\frac{1}{\sqrt{1-x^{2}}}`], // 2026-08-12
+        "2027-07-16": [String.raw`\frac{1}{\sqrt{9-4x^{2}}}`], // 2026-08-13
+        "2027-07-17": [String.raw`\frac{\arcsin\left(x\right)}{\sqrt{1-x^{2}}}`], // 2026-08-14
+        "2027-07-18": [String.raw`\frac{\arccos\left(x\right)}{\sqrt{1-x^{2}}}`], // 2026-08-15
+        "2027-07-19": [String.raw`\frac{1}{x\ln\left(x\right)}`], // 2026-08-16
+        "2027-07-20": [String.raw`\frac{1-7\cos^{2}\left(x\right)}{\sin^{7}\left(x\right)\cos^{2}\left(x\right)}`], // 2026-08-17
+        "2027-07-21": [String.raw`\frac{\ln\left(\tan\left(x\right)\right)}{\sin\left(x\right)\cos\left(x\right)}`], // 2026-08-18
+        "2027-07-22": [String.raw`\frac{x^{3}}{1+x^{2}}`], // 2026-08-19
+        "2027-07-23": [String.raw`\frac{x^{3}}{1+x^{4}}`], // 2026-08-20
+        "2027-07-24": [String.raw`\frac{x^{2}}{\sqrt{1-x}}`], // 2026-08-22
+        "2027-07-25": [String.raw`x^{\frac{1}{3}}`], // 2026-08-23
+        "2027-07-26": [String.raw`\frac{e^{x}+x+2}{\sqrt{e^{x}+x^{2}}}`], // 2026-08-24
+        "2027-07-27": [String.raw`\frac{\sin\left(x\right)}{1+\cos^{2}\left(x\right)}`], // 2026-08-25
+        "2027-07-28": [String.raw`\frac{\cos\left(x\right)}{1+\sin^{2}\left(x\right)}`], // 2026-08-26
+        "2027-07-29": [String.raw`\frac{e^{4x}}{e^{4x}+5}`], // 2026-08-27
+        "2027-07-30": [String.raw`e^{4x}`], // 2026-08-28
+        "2027-07-31": [String.raw`\sin\left(x\right)\left(1+\cos\left(x\right)\right)`], // 2026-08-29
+        "2027-08-01": [String.raw`x\arctan^{2}\left(x\right)`], // 2026-08-30
+        "2027-08-02": [String.raw`\frac{5-5\sin^{2}\left(x\right)+4\sin\left(4x\right)}{5\sin\left(2x\right)+4}`], // 2026-08-31
+        "2027-08-03": [String.raw`\frac{\sqrt{1+x^{2}}}{x^{2}}`], // 2026-09-01
+        "2027-08-04": [String.raw`x\arccos\left(x\right)`], // 2026-09-02
+        "2027-08-05": [String.raw`x\arcsin\left(x\right)`], // 2026-09-03
+        "2027-08-06": [String.raw`\frac{1}{\left(1+x^{2}\right)^{2}}`], // 2026-09-04
+        "2027-08-07": [String.raw`\frac{1+x^{2}}{\sqrt{x}}`], // 2026-09-05
+        "2027-08-08": [String.raw`\frac{1+\cos^{2}\left(x\right)}{1+\sin^{6}\left(x\right)}`], // 2026-09-06
+        "2027-08-09": [String.raw`\frac{\cos^{3}\left(x\right)}{\sqrt{\sin\left(x\right)}}`], // 2026-09-07
+        "2027-08-10": [String.raw`x\ln^{2}\left(x\right)`], // 2026-09-08
+        "2027-08-11": [String.raw`\frac{e^{x}+1}{e^{x}+x}`], // 2026-09-09
+        "2027-08-12": [String.raw`\frac{x}{4+x^{4}}`], // 2026-09-11
+        "2027-08-13": [String.raw`\frac{\sqrt{1-x}}{\sqrt{x}}`], // 2026-09-12
+        "2027-08-14": [String.raw`-\frac{\sqrt{1-\cos\left(2x\right)}}{\sqrt{2}}e^{\sqrt{\cos\left(2x\right)-\cos^{2}\left(x\right)+1}}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/786070070_1685493603582015_3834144065023692512_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=106&ig_cache_key=Mzk4NTIzMzc3ODUxOTMzMjMzMA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=xFFv97pni-QQ7kNvwGRheMW&_nc_oc=AdoLotfFVcyNWdHTu1f3bo26HvT4g7HkzJKPhd8oQWqUdPQtCIfkURvFm2a6FtFdOfTMf4kLGt-2XJaOutLw6Nkn&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=cKOWsd1XJdm3qp00sS_KNg&_nc_ss=7b689&oh=00_AQNr1dSRVUxS8EB62ETD-NTHVVA-pmZlmbVcU9tcywaNBQ&oe=6AE5F789"], // 2026-09-13
+        "2027-08-15": [String.raw`\ln\left(1-x\right)`], // 2026-09-14
+        "2027-08-16": [String.raw`\frac{1}{x^{2}+x}`], // 2026-09-15
+        "2027-08-17": [String.raw`\frac{1}{x\left(1+\ln^{2}\left(x\right)\right)}`], // 2026-09-16
+        "2027-08-18": [String.raw`e^{\arcsin\left(x\right)}`], // 2026-09-17
+        "2027-08-19": [String.raw`\frac{2}{2x+7}`], // 2026-09-18
+        "2027-08-20": [String.raw`\frac{x^{5}}{\sqrt{1-x^{3}}}`], // 2026-09-19
+        "2027-08-21": [String.raw`\frac{\left(x-1\right)^{2}}{x+1}`], // 2026-09-20
+        "2027-08-22": [String.raw`\frac{x^{2}-x}{\sqrt[3]{x}-\sqrt{x}}`], // 2026-09-21
+        "2027-08-23": [String.raw`\frac{1}{x\ln^{4}\left(x\right)}`], // 2026-09-22
+        "2027-08-24": [String.raw`\frac{x}{x^{2}+4x+5}`], // 2026-09-23
+        "2027-08-25": [String.raw`\frac{6x^{3}-2x}{x^{2}}`], // 2026-09-24
+        "2027-08-26": [String.raw`\frac{x^{2}}{\sqrt{1-x^{2}}}`], // 2026-09-25
+        "2027-08-27": [String.raw`\frac{\sqrt{1+x}}{\sqrt{1-x^2}}`], // 2026-09-26
+        "2027-08-28": [String.raw`\frac{2x}{x^2+8}`], // 2026-09-27
+        "2027-08-29": [String.raw`\frac{\cos\left(x/2\right)}{\sqrt{1+\sin\left(x\right)}}`], // 2026-09-28
+        "2027-08-30": [String.raw`x^3\sqrt{x^2-1}`], // 2026-09-29
+        "2027-08-31": [String.raw`\frac{x^3}{\sqrt{1+x^2}}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/825614911_1718639353600773_374915668476729646_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=102&ig_cache_key=Mzk5NzU1NDk1ODYwMTMwMDE4NA%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=vTr_cu8japEQ7kNvwFsisoj&_nc_oc=AdpNBG4WMsUl1nZM8tAKSKsoBKhmcTcEaZci2nmY7CKrcyV_5vNPJrDlJp1w2LlLJ3JgMQUN4kNoeUvzYs5YoxgP&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=MdlFmpRmNHWndo-3OPj0vQ&_nc_ss=7b689&oh=00_AQMYwxur0a6Yr3jUbjf2Oz-xeqrh77stydj22kw5jHJNYw&oe=6AE61242"], // 2026-09-30
+        "2027-09-01": [String.raw`\left(3x+7\right)^5`], // 2026-10-01
+        "2027-09-02": [String.raw`\frac{1}{\left(x-3\right)^{5/2}}`], // 2026-10-02
+        "2027-09-03": [String.raw`\frac{1}{\sqrt{x+1}-\sqrt{x-1}}`], // 2026-10-03
+        "2027-09-04": [String.raw`\frac{x^2}{1+x^2}`], // 2026-10-04
+        "2027-09-05": [String.raw`\frac{x^2+1}{\left(1-x^2\right)\sqrt{1+x^4}}`], // 2026-10-05
+        "2027-09-06": [String.raw`\frac{x+3}{x-6}`], // 2026-10-06
+        "2027-09-07": [String.raw`\frac{1}{2x^2+2x+1}`], // 2026-10-07
+        "2027-09-08": [String.raw`\frac{\ln\left(x\right)}{\sqrt{x}}`], // 2026-10-08
+        "2027-09-09": [String.raw`x^3\sqrt{x^4+7}`], // 2026-10-09
+        "2027-09-10": [String.raw`\frac{x^2-3x-5}{x-2}`], // 2026-10-10
+        "2027-09-11": [String.raw`\frac{\ln\left(x\right)}{x^3}`], // 2026-10-11
+        "2027-09-12": [String.raw`x^{\frac{x-1}{\ln\left(x\right)}}`], // 2026-10-12
+        "2027-09-13": [String.raw`\frac{x}{1+x^4}`], // 2026-10-13
+        "2027-09-14": [String.raw`\sqrt{1+\sqrt{x}}`, "https://scontent-sea5-1.cdninstagram.com/v/t39.30808-6/827995602_1718646410266734_8267943167601907745_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=105&ig_cache_key=NDAwNzcwMTc4OTU3ODE5NTIwNg%3D%3D.3-ccb7-5&ccb=7-5&_nc_sid=58cdad&efg=eyJ2ZW5jb2RlX3RhZyI6IkNBUk9VU0VMX0lURU0ueHBpZHMuMTA4MC5zZHIucmVndWxhcl9waG90by5DMyJ9&_nc_ohc=ewf8bLMh-i8Q7kNvwHlu4Sa&_nc_oc=AdofIHLBTv77JyNComiMw0Kaci2-CmO50nlL6dBkpTYhVqMDQ43P4hVn-qEZLnaUaUVjAU2mFDS7YSLLk-zYVy2F&_nc_zt=23&_nc_ht=scontent-sea5-1.cdninstagram.com&_nc_gid=vquww4X39cIofLxUVzdsrw&_nc_ss=7b689&oh=00_AQMFBSHUQFK7j21vHQ5vW1D7F-TvEUPzwHzmSY9y7l324g&oe=6AE5F31C"], // 2026-10-14
+        "2027-09-15": [String.raw`\ln\left(x+\sqrt{x^2-1}\right)`], // 2026-10-15
+        "2027-09-16": [String.raw`\frac{\sin\left(x\right)}{e^{\cos\left(x\right)}}`], // 2026-10-16
+        "2027-09-17": [String.raw`\frac{\cos\left(x\right)}{e^{\sin\left(x\right)}}`], // 2026-10-17
+        "2027-09-18": [String.raw`\frac{1}{x+\sqrt{x}}`], // 2026-10-18
+        "2027-09-19": [String.raw`\left(\frac{x-1}{x^2+1}\right)^2 e^x`], // 2026-10-19
+        "2027-09-20": [String.raw`\sin\left(2x\right)\cos\left(x\right)`], // 2026-10-20
+        "2027-09-21": [String.raw`\ln\left(x+\sqrt{x}\right)`], // 2026-10-21
+        "2027-09-22": [String.raw`\frac{\arctan\left(\ln\left(x\right)\right)}{x}`], // 2026-10-22
+        "2027-09-23": [String.raw`\sqrt{\frac{\ln\left(x+\sqrt{1+x^2}\right)}{1+x^2}}`], // 2026-10-23
+        "2027-09-24": [String.raw`\frac{x^2-1}{x^2+1}`], // 2026-10-24
+        "2027-09-25": [String.raw`\sqrt{x}\ln\left(\sqrt{x}\right)`], // 2026-10-25
+        "2027-09-26": [String.raw`\frac{\sqrt{x}\left(x^2+x+1\right)}{\sqrt{x+1}\sqrt{x^4+x^2+1}}`], // 2026-10-26
+      };
+      const DATE_KEYS = Object.keys(INTEGRANDS);
+      const FIRST_INVALID_DAY = new Date(DATE_KEYS[DATE_KEYS.length - 1] + 'T00:00:00');  // local timezone midnight
+      FIRST_INVALID_DAY.setDate(FIRST_INVALID_DAY.getDate() + 1);
+      if (new Date() < FIRST_INVALID_DAY) {
+        const TODAY = new Date().toLocaleDateString('en-CA');
+        return INTEGRANDS[TODAY][0];
+      }
+      // Out of integrals
+      return null;
+    }
+    // # IMPORTANT
+    // # How to add more integrands
+    // 1. Using Muse, scrape from integralsforyou, using the instagram descriptions,
+    //    in the following format. Note image urls for any potentially incorrect integrands.
+    //    Note that we're saving the date as well.
+    // ```js
+    // [
+    //   [String.raw`x^2`],  // YYYY-MM-DD  // no \int or dx
+    //   [String.raw`x^2`],  // YYYY-MM-DD
+    //   [String.raw`x^2`, instagram image url],  // YYYY-MM-DD  // image url for potentially incorrect integrand
+    //   [String.raw`x^2`],  // YYYY-MM-DD
+    //   [String.raw`x^2`],  // YYYY-MM-DD
+    // ]
+    // ```
+    // 2. Pass the output to integrand_corrector.html and manually correct any incorrect integrands.
+    // 3. Filter out rows containing constants other than e and pi
+    // 4. Ensure all parentheses are \left( or \right)
+    // 5. Convert to JS object format like in the function:
+    // ```js
+    // {
+    //   "YYYY-MM-DD": [String.raw`x^2`],  // YYYY-MM-DD  // no \int or dx
+    //   "YYYY-MM-DD": [String.raw`x^2`],  // YYYY-MM-DD
+    //   "YYYY-MM-DD": [String.raw`x^2`, instagram image url],  // YYYY-MM-DD  // image url for potentially incorrect integrand
+    //   "YYYY-MM-DD": [String.raw`x^2`],  // YYYY-MM-DD
+    //   "YYYY-MM-DD": [String.raw`x^2`],  // YYYY-MM-DD
+    // }
+    // ```
+    // 6. DONE, just add to the existing INTEGRANDS object.
+    const INTEGRAND = getTodaysIntegrand();
+    if (INTEGRAND === null) alert('Out of integrals! Please ask the developer to add more integrals!')
+    $('#integrand').html('\\[ \\LARGE{ \\int ' + INTEGRAND + ' \\ dx}\\]');
+
+    const brackets = {
+      '(': ')',
+      '[': ']',
+      '{': '}',
+    }
+    function getSafeExpression(expr) {
+      expr = expr.replaceAll('\\ ', '').replaceAll(' ', '');
+      for (let i = 0; i + 2 < expr.length; i++) {
+        if (expr[i] != '^') continue;
+        let j = i;
+        while (j > 0 && expr[j - 1].match(/[a-zA-Z]/)) {
+          j--;
+        }
+        if (j == 0 || expr[j - 1] != '\\' || i - j <= 1) continue;
+        if (+expr[i + 1] != expr[i + 1]) continue;
+        let k = i + 2;
+        let h = k;
+        let d = [];
+        if (!!brackets[expr[h]]) {
+          d.push(brackets[expr[h]])
+        }
+        h++;
+        let dmore = d.length > 0;
+        for (; !dmore || d.length; h++) {
+          if (expr[h] == d[d.length - 1]) {
+            d.pop();
+            continue;
+          }
+          if (!!brackets[expr[h]]) {
+            d.push(brackets[expr[h]]);
+          }
+          dmore = dmore || d.length > 0;
+        }
+        let newExpr = (
+          expr.substring(0, i) + '(' + expr.substring(k, h) + ')^' + expr.substring(i + 1, k) + expr.substring(h)
+        );
+        return getSafeExpression(newExpr);
+      }
+      return expr;
+    }
+
+    const today = new Date().toLocaleDateString();
+
+    var elt = document.getElementById('calculator');
+    var calculator = Desmos.GraphingCalculator(elt);
+    calculator.setExpression({ type: 'text', id: 'instructions', text: 'Enter your answer within the () below to check if you are correct.' });
+    calculator.setExpression({ id: 'actual', latex: 'f(x)=' + getSafeExpression(INTEGRAND), secret: true });
+    calculator.setExpression({ id: 'user', latex: String.raw`g(x)=\frac{d}{dx}\left(\right)` });
+
+    let equivalent = false;
+    calculator.observeEvent('change', function (eventName, event) {
+      if (!equivalent) return;
+      setTimeout(() => {
+        if (!equivalent) return;
+        localStorage.setItem('expressions', JSON.stringify(calculator.getExpressions()));
+        localStorage.setItem('expressionsDay', today)
+      }, 0);
+    });
+    if (localStorage.getItem('expressionsDay') == today) {
+      calculator.setExpressions(JSON.parse(localStorage.getItem('expressions')) || [])
+    }
+
+    let fResults = [], gResults = [];
+
+    let f = calculator.HelperExpression({ latex: 'f([-50,-49.9...50])' });
+    f.observe('listValue', function () {
+      fResults = f.listValue || [];
+      checkEquivalency();
+    });
+
+    let g = calculator.HelperExpression({ latex: 'g([-50,-49.9...50])' });
+    g.observe('listValue', function () {
+      gResults = g.listValue || [];
+      checkEquivalency();
+    })
+
+    function addTodayToLocalStorage() {
+      const daysCompleted = JSON.parse(localStorage.getItem('daysCompleted')) || {};
+      localStorage.setItem('daysCompleted', JSON.stringify({
+        ...daysCompleted,
+        [today]: true,
+      }));
+      getStatisticsArray();
+    }
+
+    function isTodayInLocalStorage() {
+      const daysCompleted = JSON.parse(localStorage.getItem('daysCompleted')) || {};
+      return !!daysCompleted[today];
+    }
+
+    function getStatisticsArray() {
+      const daysCompleted = JSON.parse(localStorage.getItem('daysCompleted')) || {};
+      const statistics = [];
+      for (let i = 0; i < 365 * 10; i++) {
+        let day = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toLocaleDateString()
+        statistics.push([day, daysCompleted[day] || false]);
+      }
+      while (statistics.length && !statistics[statistics.length - 1][1]) {
+        statistics.pop();
+      }
+
+      let $el = $('#statisticsContent');
+      $el.html('');
+      for (let [day, completed] of statistics) {
+        if (day == today && completed) {
+          $el.append(`
+              <h4 class="text-success">Integral complete! Come back tomorrow for another integral!</h4>
+            `)
+        }
+        $el.append(`
+            <div class='badge ${completed ? "badge-success" : "badge-secondary"}'>${day}</div>
+          `)
+      }
+      if (!statistics.length) {
+        $('#statisticsContent').html('')
+      }
+      return statistics;
+    }
+    getStatisticsArray();
+
+    function checkEquivalency() {
+      equivalent = false;
+      if (!fResults.length || fResults.length !== gResults.length) return;
+      let res = true;
+      let cnt = 0;
+      let fDomain = 0, fngDomain = 0;
+      for (let i = 0; i < fResults.length; i++) {
+        let x = fResults[i];
+        let y = gResults[i];
+        fDomain += isFinite(x);
+        fngDomain += isFinite(x) && isFinite(y);
+        if (!isFinite(x) || !isFinite(y)) continue;
+        if (Math.min(x, y) < Number.MIN_SAFE_INTEGER / 4) continue;
+        if (Math.max(x, y) > Number.MAX_SAFE_INTEGER / 4) continue;
+        if (Math.abs(x - y) > 0.0001 * Math.min(Math.abs(x), Math.abs(y))) {
+          console.log(x, y);
+          res = false;
+          break;
+        }
+        cnt++;
+      }
+      if (res && cnt > 0 && fngDomain / fDomain > 0.9) {
+        console.log(`equivalent ${res} ${cnt}`);
+        equivalent = true;
+        localStorage.setItem('expressions', JSON.stringify(calculator.getExpressions()));
+        localStorage.setItem('expressionsDay', today)
+        addTodayToLocalStorage();
+        setTimeout(() => {
+          $("#statisticsModalScrollableContainer").find('button').click();
+        }, 20);
+      }
+    }
+
+    isTodayInLocalStorage() ? (
+      $('#statisticsModalScrollableContainer').find('button').click()
+    ) : (
+      $('#howToPlayModalScrollableContainer').find('button').click()
+    );
+
+    $('#darkThemeSwitch').on('change', function () {
+      localStorage.setItem('darkTheme', this.checked);
+      $('html').attr('data-bs-theme', this.checked ? 'dark' : 'light');
+    });
+    $('#darkThemeSwitch').val(localStorage.getItem('darkTheme') === 'true');
+
+
+  </script>
+
+</body>
+
+</html>
