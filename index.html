@@ -198,43 +198,46 @@
     // }
     // ```
     // 6. DONE, just add to the existing INTEGRANDS object.
+    function getRepeatIntegrand() {
+      const INTEGRANDS = [
+        String.raw`\sqrt{e^{x}}`,
+        String.raw`\left(x+1\right)^2`,
+        String.raw`\frac{x^3}{\sqrt{1+x^2}}`,
+        String.raw`x^3\cdot\sqrt{x^2-1}`,
+        String.raw`\frac{x^2}{\sqrt{1-x^2}}`,
+        String.raw`\frac{\sqrt{1+x}}{\sqrt{1-x^2}}`,
+        String.raw`\frac{x}{x^2+4x+5}`,
+        String.raw`\frac{x^5}{\sqrt{1-x^3}}`,
+        String.raw`\frac{2x}{x^2+8}`,
+        String.raw`\frac{\left(x-1\right)^2}{x+1}`,
+        String.raw`\frac{6x^3-2x}{x^2}`,
+        String.raw`\frac{2}{2x+7}`,
+        String.raw`e^{\arcsin(x)}`,
+        String.raw`\frac{1}{x\cdot\left(1+\ln^2(x)\right)}`,
+        String.raw`\frac{1}{x^2+x}`,
+        String.raw`\ln\left(1-x\right)`,
+        String.raw`\frac{\sqrt{1-x}}{\sqrt{x}}`,
+        String.raw`\frac{x}{4+x^4}`,
+        String.raw`\frac{e^x+1}{e^x+x}`,
+        String.raw`x\cdot\ln^2\left(x\right)`,
+        String.raw`\frac{\cos^3\left(x\right)}{\sqrt{\sin\left(x\right)}}`,
+        String.raw`\frac{1+x^2}{\sqrt{x}}`,
+        String.raw`x\cdot\arcsin\left(x\right)`,
+        String.raw`x\cdot\arccos\left(x\right)`,
+        String.raw`\frac{1}{\left(1+x^2\right)^2}`,
+        String.raw`\frac{\sqrt{1+x^2}}{x^2}`,
+        String.raw`x\cdot\arctan^2\left(x\right)`,
+        String.raw`\frac{x^2}{\sqrt{1-x}}`,
+        String.raw`\frac{e^{4x}}{e^{4x}+5}`,
+        String.raw`\frac{x^3}{1+x^4}`,
+        String.raw`\frac{x^3}{1+x^2}`,
+      ];
+      const INTEGRAND_POS = Math.floor((new Date() - new Date('2/12/2025')) / 1000 / 60 / 60 / 24) % INTEGRANDS.length
+      return INTEGRANDS[INTEGRAND_POS];
+    }
     function getTodaysIntegrand() {
       if (new Date() < new Date('Oct 26 2026')) {
-        const INTEGRANDS = [
-          String.raw`\sqrt{e^{x}}`,
-          String.raw`\left(x+1\right)^2`,
-          String.raw`\frac{x^3}{\sqrt{1+x^2}}`,
-          String.raw`x^3\cdot\sqrt{x^2-1}`,
-          String.raw`\frac{x^2}{\sqrt{1-x^2}}`,
-          String.raw`\frac{\sqrt{1+x}}{\sqrt{1-x^2}}`,
-          String.raw`\frac{x}{x^2+4x+5}`,
-          String.raw`\frac{x^5}{\sqrt{1-x^3}}`,
-          String.raw`\frac{2x}{x^2+8}`,
-          String.raw`\frac{\left(x-1\right)^2}{x+1}`,
-          String.raw`\frac{6x^3-2x}{x^2}`,
-          String.raw`\frac{2}{2x+7}`,
-          String.raw`e^{\arcsin(x)}`,
-          String.raw`\frac{1}{x\cdot\left(1+\ln^2(x)\right)}`,
-          String.raw`\frac{1}{x^2+x}`,
-          String.raw`\ln\left(1-x\right)`,
-          String.raw`\frac{\sqrt{1-x}}{\sqrt{x}}`,
-          String.raw`\frac{x}{4+x^4}`,
-          String.raw`\frac{e^x+1}{e^x+x}`,
-          String.raw`x\cdot\ln^2\left(x\right)`,
-          String.raw`\frac{\cos^3\left(x\right)}{\sqrt{\sin\left(x\right)}}`,
-          String.raw`\frac{1+x^2}{\sqrt{x}}`,
-          String.raw`x\cdot\arcsin\left(x\right)`,
-          String.raw`x\cdot\arccos\left(x\right)`,
-          String.raw`\frac{1}{\left(1+x^2\right)^2}`,
-          String.raw`\frac{\sqrt{1+x^2}}{x^2}`,
-          String.raw`x\cdot\arctan^2\left(x\right)`,
-          String.raw`\frac{x^2}{\sqrt{1-x}}`,
-          String.raw`\frac{e^{4x}}{e^{4x}+5}`,
-          String.raw`\frac{x^3}{1+x^4}`,
-          String.raw`\frac{x^3}{1+x^2}`,
-        ];
-        const INTEGRAND_POS = Math.floor((new Date() - new Date('2/12/2025')) / 1000 / 60 / 60 / 24) % INTEGRANDS.length
-        return INTEGRANDS[INTEGRAND_POS];
+        return getRepeatIntegrand();
       }
       const INTEGRANDS = {
         "2026-10-26": [String.raw`\frac{e^{-\sqrt{x}}}{\sqrt{x}}`], // 2025-10-28
@@ -582,7 +585,8 @@
         return INTEGRANDS[TODAY][0];
       }
       // Out of integrals
-      return null;
+      alert('Out of integrals! Please ask the developer to add more integrals!');
+      return getRepeatIntegrand();
     }
     // # IMPORTANT
     // # How to add more integrands
@@ -613,7 +617,6 @@
     // ```
     // 6. DONE, just add to the existing INTEGRANDS object.
     const INTEGRAND = getTodaysIntegrand();
-    if (INTEGRAND === null) alert('Out of integrals! Please ask the developer to add more integrals!')
     $('#integrand').html('\\[ \\LARGE{ \\int ' + INTEGRAND + ' \\ dx}\\]');
 
     const brackets = {
