@@ -198,6 +198,10 @@
     // }
     // ```
     // 6. DONE, just add to the existing INTEGRANDS object.
+    function getYYYYMMDD(date) {
+      if (date == null) date = new Date();
+      return new Date(date).toLocaleDateString('en-CA');
+    }
     function getRepeatIntegrand() {
       const INTEGRANDS = [
         String.raw`\sqrt{e^{x}}`,
@@ -232,7 +236,7 @@
         String.raw`\frac{x^3}{1+x^4}`,
         String.raw`\frac{x^3}{1+x^2}`,
       ];
-      const INTEGRAND_POS = Math.floor((new Date() - new Date('2/12/2025')) / 1000 / 60 / 60 / 24) % INTEGRANDS.length
+      const INTEGRAND_POS = (new Date(getYYYYMMDD()) - new Date('2025-02-12')) / 1000 / 60 / 60 / 24 % INTEGRANDS.length;
       return INTEGRANDS[INTEGRAND_POS];
     }
     function getTodaysIntegrand() {
@@ -581,8 +585,7 @@
       const FIRST_INVALID_DAY = new Date(DATE_KEYS[DATE_KEYS.length - 1] + 'T00:00:00');  // local timezone midnight
       FIRST_INVALID_DAY.setDate(FIRST_INVALID_DAY.getDate() + 1);
       if (new Date() < FIRST_INVALID_DAY) {
-        const TODAY = new Date().toLocaleDateString('en-CA');
-        return INTEGRANDS[TODAY][0];
+        return INTEGRANDS[getYYYYMMDD()][0];
       }
       // Out of integrals
       alert('Out of integrals! Please ask the developer to add more integrals!');
@@ -660,7 +663,7 @@
       return expr;
     }
 
-    const today = new Date().toLocaleDateString();
+    const today = getYYYYMMDD();
 
     var elt = document.getElementById('calculator');
     var calculator = Desmos.GraphingCalculator(elt);
@@ -706,15 +709,21 @@
 
     function isTodayInLocalStorage() {
       const daysCompleted = JSON.parse(localStorage.getItem('daysCompleted')) || {};
-      return !!daysCompleted[today];
+      return !!(daysCompleted[today] ?? daysCompleted[new Date().toLocaleDateString()]);
     }
 
     function getStatisticsArray() {
       const daysCompleted = JSON.parse(localStorage.getItem('daysCompleted')) || {};
       const statistics = [];
       for (let i = 0; i < 365 * 10; i++) {
-        let day = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toLocaleDateString()
-        statistics.push([day, daysCompleted[day] || false]);
+        let day = new Date();
+        day.setDate(day.getDate() - i);
+
+        let dayString = getYYYYMMDD(day);
+        let legacyDayString = day.toLocaleDateString();
+
+        let completed = daysCompleted[dayString] ?? daysCompleted[legacyDayString] ?? false;
+        statistics.push([dayString, completed]);
       }
       while (statistics.length && !statistics[statistics.length - 1][1]) {
         statistics.pop();
